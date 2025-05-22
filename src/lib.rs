@@ -1,4 +1,4 @@
-use bdk_wallet::bitcoin::{Amount, Network, Address, Txid, FeeRate};
+use bdk_wallet::bitcoin::{Amount, Txid};
 use serde::{Serialize, Deserialize};
 use chrono::{DateTime, Local};
 

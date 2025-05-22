@@ -22,6 +22,6 @@ impl ListItemBitcoin for ListItem {
         let color = ctx.get::<PelicanUI>().theme.colors.status.warning;
         let usd = &format_usd(btc * price);
         let btc = &format_nano_btc(btc);
-        ListItem::new(ctx, true, "Sending bitcoin", Some(("warning", color)), Some("unconfirmed"), None, Some(&usd), Some(&btc), None, None, None, on_click)
+        ListItem::new(ctx, true, "Sending bitcoin", Some(("warning", color)), Some("unconfirmed"), None, Some(usd), Some(btc), None, None, None, on_click)
     }
 }

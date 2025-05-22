@@ -60,6 +60,7 @@ impl OnEvent for QRCodeScanner {
             let frame = self.3.get_frame();
             match frame {
                 Ok(f) => {
+                    // MOVE TO THERAD
                     if let Some(data) = self.find_code(f.clone()) {
                         println!("FOUND DATA, TRIGGERING EVENT");
                         ctx.trigger_event(QRCodeScannedEvent(data))
@@ -69,12 +70,12 @@ impl OnEvent for QRCodeScanner {
                     let image = ctx.add_image(f);
                     self.1 = Some(Image{shape: ShapeType::Rectangle(0.0, (300.0, 300.0)), image, color: None});
                 },
-                Err(CameraViewError::AccessDenied) => {
+                Err(CameraError::AccessDenied) => {
                     let background = ctx.get::<PelicanUI>().theme.colors.background.secondary;
                     *self.2.background() = Some(RoundedRectangle::new(0.0, 8.0, background));
                     *self.2.message() = Some(Message::new(ctx, "settings", "Enable camera in settings."));
                 },
-                Err(CameraViewError::FailedToGetFrame) => {
+                Err(CameraError::FailedToGetFrame) | Err(CameraError::WaitingForAccess) => {
                     let background = ctx.get::<PelicanUI>().theme.colors.background.secondary;
                     *self.2.background() = Some(RoundedRectangle::new(0.0, 8.0, background));
                     *self.2.message() = Some(Message::new(ctx, "camera", "Accessing device camera."));
