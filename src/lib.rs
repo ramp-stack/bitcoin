@@ -53,7 +53,7 @@ pub fn format_address(a: String) -> String {
 }
 
 pub mod prelude {
-    pub use crate::*;
+    pub use crate::{BDKTransaction, format_usd, format_nano_btc, format_address, NANS};
     pub use crate::components::*;
     pub use crate::events::*;
 }
