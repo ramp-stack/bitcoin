@@ -1,0 +1,14 @@
+[package]
+name = "pelican_ui_bitcoin"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+bdk_wallet = "1.2.0"
+chrono = { version = "0.4.40", features = ["serde"] }
+image = "0.25.6"
+pelican_ui = {path = "../pelican_ui" }
+qrcode = "0.14.1"
+quircs = "0.10.2"
+rust_on_rails = {path="../rust_on_rails"}
+serde = "1.0.219"
