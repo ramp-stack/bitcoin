@@ -7,6 +7,8 @@ edition = "2024"
 bdk_wallet = "1.2.0"
 chrono = { version = "0.4.40", features = ["serde"] }
 image = "0.25.6"
+imageproc = "0.25.0"
+opencv = "0.94.4"
 pelican_ui = {path = "../pelican_ui" }
 qrcode = "0.14.1"
 quircs = "0.10.2"
