@@ -2731,12 +2731,23 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "57c0d7b74b563b49d38dae00a0c37d4d6de9b432382b2892f0574ddcae73fd0a"
 
 [[package]]
+name = "pelican_macro"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2 1.0.95",
+ "quote 1.0.40",
+ "syn 2.0.101",
+]
+
+[[package]]
 name = "pelican_ui"
 version = "1.0.6"
 dependencies = [
  "chrono",
+ "downcast-rs 2.0.1",
  "dyn-clone",
  "image 0.25.6",
+ "pelican_macro",
  "qrc",
  "qrcode 0.14.1",
  "quircs",
