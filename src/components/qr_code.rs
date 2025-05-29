@@ -1,7 +1,7 @@
 use rust_on_rails::prelude::*;
 use pelican_ui::prelude::*;
 
-use image::{Rgb, RgbImage, RgbaImage, DynamicImage};
+use image::{Rgb, RgbImage, DynamicImage};
 use imageproc::drawing::{draw_filled_circle_mut, draw_filled_rect_mut};
 use imageproc::rect::Rect;
 use qrcode::QrCode;

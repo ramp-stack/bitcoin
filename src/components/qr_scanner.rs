@@ -1,21 +1,8 @@
 use rust_on_rails::prelude::*;
 use pelican_ui::prelude::*;
 use pelican_ui::prelude::Text as Text;
-use image::{DynamicImage, GrayImage, Luma, Rgba, RgbaImage};
-use imageproc::region_labelling::{connected_components, Connectivity};
-use imageproc::contours::find_contours_with_threshold;
-use image::imageops::invert;
-use imageproc::contrast::ThresholdType;
-use imageproc::contrast::threshold;
-use imageproc::contours::BorderType;
-use imageproc::contours::Contour;
-use imageproc::drawing::draw_filled_rect_mut;
-use imageproc::rect::Rect;
-use std::path::Path;
-
+use image::{DynamicImage, GrayImage, RgbaImage};
 use std::sync::{Mutex, Arc};
-use std::sync::atomic::{AtomicBool, Ordering};
-
 
 use quircs::Quirc;
 // use std::sync::mpsc::{self, Receiver, Sender};
@@ -141,7 +128,6 @@ impl Message {
 }
 
 fn decode_image(img_gray: GrayImage, mut decoder: Quirc) -> Option<String> {
-    img_gray.save("test.png");
     let codes = decoder.identify(img_gray.width() as usize, img_gray.height() as usize, &img_gray);
 
     for code in codes {
