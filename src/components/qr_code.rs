@@ -4,7 +4,7 @@ use pelican_ui::prelude::*;
 use image::{Rgb, RgbImage, DynamicImage};
 use imageproc::drawing::{draw_filled_circle_mut, draw_filled_rect_mut};
 use imageproc::rect::Rect;
-use qrcode::QrCode;
+use qrcode::{QrCode, EcLevel, Version};
 
 /// A component representing a QR code with a branded logo.
 #[derive(Debug, Component)]
@@ -45,27 +45,24 @@ impl QRCode {
 
 fn generate_qr_code(data: &str) -> RgbImage {
     let scale = 60;
-    let logo_size_px: f32 = 500.0;
 
     let fg_color = Rgb([0, 0, 0]);
     let bg_color = Rgb([255, 255, 255]);
 
-    let code = QrCode::new(data).expect("Failed to create QR");
+    let code = QrCode::with_error_correction_level(data, EcLevel::H).expect("Failed to create QR");
     let module_count = code.width();
     let img_size = module_count * scale;
 
     let mut img = RgbImage::from_pixel(img_size as u32, img_size as u32, bg_color);
+    let logo_size_px: f32 = img_size as f32 / 3.8;
 
-    // Finder pattern size in modules
     let finder_size = 7;
 
-    // Compute logo size in modules based on desired pixel size
     let module_size = img_size as f32 / module_count as f32;
     let logo_modules = ceil_to_odd(logo_size_px / module_size);
     let logo_start = (module_count - logo_modules) / 2;
     let logo_end = logo_start + logo_modules;
 
-    // Draw finder patterns
     for &(fx, fy) in &[
         (0, 0),
         (0, module_count - finder_size),
@@ -81,7 +78,6 @@ fn generate_qr_code(data: &str) -> RgbImage {
         );
     }
 
-    // Draw QR code modules
     for y in 0..module_count {
         for x in 0..module_count {
             if is_in_finder_pattern_area(x, y, module_count, finder_size) {
@@ -159,3 +155,4 @@ fn ceil_to_odd(val: f32) -> usize {
     if v % 2 == 0 { v += 1 }
     v
 }
+

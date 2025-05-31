@@ -35,8 +35,7 @@ impl QRCodeScanner {
         let flag_clone = self.5.clone();
 
         std::thread::spawn(move || {
-            let img = DynamicImage::ImageRgba8(img);
-            let result = decode_image(img.to_luma8(), Quirc::default());
+            let result = decode_image(img, Quirc::default());
 
             if let Some(r) = result {
                 *result_clone.lock().unwrap() = Some(r);
@@ -54,7 +53,7 @@ impl OnEvent for QRCodeScanner {
             let frame = self.3.get_frame();
             match frame {
                 Ok(f) => {
-                    
+                    // let f = mirrored_from(&f);
                     self.find_code(f.clone());
                     if let Some(data) = &*self.4.lock().unwrap() {
                         ctx.trigger_event(QRCodeScannedEvent(data.to_string()));
@@ -127,25 +126,42 @@ impl Message {
     }
 }
 
-fn decode_image(img_gray: GrayImage, mut decoder: Quirc) -> Option<String> {
-    let codes = decoder.identify(img_gray.width() as usize, img_gray.height() as usize, &img_gray);
+fn decode_image(img_rgba: RgbaImage, mut decoder: Quirc) -> Option<String> {
+    let img_gray: GrayImage = DynamicImage::ImageRgba8(img_rgba).to_luma8();
+
+    let codes = decoder.identify(
+        img_gray.width() as usize,
+        img_gray.height() as usize,
+        &img_gray,
+    );
 
     for code in codes {
-        // println!("Code {:?}", code);
         match code {
-            Ok(c) => {
-                match c.decode() {
-                    Ok(decoded) => {
-                        let code = std::str::from_utf8(&decoded.payload).unwrap();
-                        println!("qrcode: {}", code);
-                        return Some(code.to_string());
-                    }
-                    Err(e) => println!("COULD NOT DECODE {:?}", e)
+            Ok(c) => match c.decode() {
+                Ok(decoded) => {
+                    let code = std::str::from_utf8(&decoded.payload).unwrap_or("<invalid utf8>");
+                    println!("qrcode: {}", code);
+                    return Some(code.to_string());
                 }
-            }
-            Err(e) => println!("COULD NOT UNWRAP {:?}", e)
+                Err(e) => println!("COULD NOT DECODE {:?}", e),
+            },
+            Err(e) => println!("COULD NOT UNWRAP {:?}", e),
         }
     }
     println!("ERROR OR NO CODE");
     None
 }
+
+// pub fn mirrored_from(image: &RgbaImage) -> RgbaImage {
+//     let (width, height) = image.dimensions();
+//     let mut mirrored = RgbaImage::new(width, height);
+
+//     for y in 0..height {
+//         for x in 0..width {
+//             let pixel: image::Rgba<u8> = *image.get_pixel(x, y);
+//             mirrored.put_pixel(width - 1 - x, y, pixel);
+//         }
+//     }
+
+//     mirrored
+// }

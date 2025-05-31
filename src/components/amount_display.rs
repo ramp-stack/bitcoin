@@ -151,7 +151,8 @@ impl AmountInputContent {
                 self.2.3 = true; // Disable buttons
             }
             _ if value > self.3.1 => {
-                let error = format!("${:.2} maximum.", self.3.1);
+                let max = self.3.1.max(0.00);
+                let error = format!("${:.2} maximum.", max);
                 self.2.set_error(ctx, &error); // Exceeds max -> show error
                 self.2.3 = true; // Disable buttons
             }
