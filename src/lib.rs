@@ -2,8 +2,8 @@ use bdk_wallet::bitcoin::{Amount, Txid};
 use serde::{Serialize, Deserialize};
 use chrono::{DateTime, Local};
 
-mod components;
-mod events;
+pub mod components;
+pub mod events;
 
 pub const NANS: f64 = 1_000_000_000.0;
 
@@ -50,11 +50,5 @@ pub fn format_nano_btc(nb: f64) -> String {
 
 pub fn format_address(a: String) -> String {
     format!("{}...{}", &a[..7], &a[a.len().saturating_sub(3)..])
-}
-
-pub mod prelude {
-    pub use crate::{BDKTransaction, format_usd, format_nano_btc, format_address, NANS};
-    pub use crate::components::*;
-    pub use crate::events::*;
 }
 

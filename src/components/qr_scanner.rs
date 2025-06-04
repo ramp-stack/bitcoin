@@ -1,7 +1,20 @@
-use pelican_ui::events::OnEvent;
-use pelican_ui::drawable::{Drawable, Component, Align, Shape};
+use pelican_ui::events::{OnEvent, Event, TickEvent};
+use pelican_ui::drawable::{Drawable, Component, ShapeType, Image, Align};
 use pelican_ui::layout::{Area, SizeRequest, Layout};
-use pelican_ui::{Context, Component};
+use pelican_ui::{Context, Component, Camera, CameraError};
+
+use pelican_ui_std::{
+    RoundedRectangle,
+    Padding,
+    Size,
+    Offset,
+    Stack,
+    TextStyle,
+    Text,
+    Icon,
+    Column
+};
+
 
 use image::{DynamicImage, GrayImage, RgbaImage};
 use std::sync::{Mutex, Arc};
@@ -40,7 +53,7 @@ impl QRCodeScanner {
 
 impl OnEvent for QRCodeScanner {
     fn on_event(&mut self, ctx: &mut Context, event: &mut dyn Event) -> bool {
-        if let Some(TickEvent) = event.downcast_ref() {
+        if let Some(TickEvent) = event.downcast_ref::<TickEvent>() {
             let frame = self.3.get_frame();
             match frame {
                 Ok(f) => {
@@ -51,16 +64,16 @@ impl OnEvent for QRCodeScanner {
                     }
                     
                     *self.2.message() = None; *self.2.background() = None;
-                    let image = ctx.add_image(f);
+                    let image = ctx.assets.add_image(f);
                     self.1 = Some(Image{shape: ShapeType::Rectangle(0.0, (300.0, 300.0)), image, color: None});
                 },
                 Err(CameraError::AccessDenied) => {
-                    let background = ctx.get::<PelicanUI>().theme.colors.background.secondary;
+                    let background = ctx.theme.colors.background.secondary;
                     *self.2.background() = Some(RoundedRectangle::new(0.0, 8.0, background));
                     *self.2.message() = Some(Message::new(ctx, "settings", "Enable camera in settings."));
                 },
                 Err(CameraError::FailedToGetFrame) | Err(CameraError::WaitingForAccess) => {
-                    let background = ctx.get::<PelicanUI>().theme.colors.background.secondary;
+                    let background = ctx.theme.colors.background.secondary;
                     *self.2.background() = Some(RoundedRectangle::new(0.0, 8.0, background));
                     *self.2.message() = Some(Message::new(ctx, "camera", "Accessing device camera."));
                 }
@@ -76,7 +89,7 @@ impl OnEvent for QRGuide {}
 
 impl QRGuide {
     pub fn new(ctx: &mut Context) -> Self {
-        let colors = ctx.get::<PelicanUI>().theme.colors;
+        let colors = ctx.theme.colors;
         let (background, color) = (colors.background.secondary, colors.outline.secondary);
         QRGuide(
             Stack(Offset::Center, Offset::Center, Size::Static(308.0), Size::Static(308.0), Padding::default()), 
@@ -96,7 +109,7 @@ impl OnEvent for Message {}
 
 impl Message {
     pub fn new(ctx: &mut Context, icon: &'static str, msg: &str) -> Self {
-        let theme = &ctx.get::<PelicanUI>().theme;
+        let theme = &ctx.theme;
         let (color, font_size) = (theme.colors.shades.lighten, theme.fonts.size.sm);
         Message(Column::center(4.0), 
             Icon::new(ctx, icon, color, 48.0),
