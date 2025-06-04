@@ -1,4 +1,5 @@
-use rust_on_rails::prelude::*;
+use pelican_ui::events::Event;
+use pelican_ui::Context;
 
 /// Event triggered when the [`QRScanner`] component detects a QR code.
 #[derive(Debug, Clone)]

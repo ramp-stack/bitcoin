@@ -1,28 +1,19 @@
-use rust_on_rails::prelude::*;
-use pelican_ui::prelude::*;
-use pelican_ui::prelude::Text as Text;
+use pelican_ui::events::OnEvent;
+use pelican_ui::drawable::{Drawable, Component, Align, Shape};
+use pelican_ui::layout::{Area, SizeRequest, Layout};
+use pelican_ui::{Context, Component};
+
 use image::{DynamicImage, GrayImage, RgbaImage};
 use std::sync::{Mutex, Arc};
 
 use quircs::Quirc;
-// use std::sync::mpsc::{self, Receiver, Sender};
 
 use crate::events::QRCodeScannedEvent;
 
-/// A component for scanning QR codes using the device camera.
 #[derive(Debug, Component)]
 pub struct QRCodeScanner(Stack, Option<Image>, QRGuide, #[skip] Camera, #[skip] Arc<Mutex<Option<String>>>, #[skip] Arc<Mutex<bool>>);
 
 impl QRCodeScanner {
-    /// Creates a new `QRCodeScanner` component with a centered stack layout, a QR guide, and a camera instance.
-    ///
-    /// # Parameters
-    /// - `ctx`: The [`Context`] for accessing the app's theme.
-    ///
-    /// # Example
-    /// ```
-    /// let scanner = QRCodeScanner::new(ctx);
-    /// ```
     pub fn new(ctx: &mut Context) -> Self {
         QRCodeScanner(Stack::center(), None, QRGuide::new(ctx), Camera::new(), Arc::new(Mutex::new(None)), Arc::new(Mutex::new(false)))
     }
@@ -78,18 +69,6 @@ impl OnEvent for QRCodeScanner {
         true
     }
 }
-
-//  if let Ok(bytes) = self.3.try_recv() {
-//         let avatar = Avatar::new(
-//             ctx,
-//             AvatarContent::Icon("profile", AvatarIconStyle::Secondary),
-//             Some(("edit", AvatarIconStyle::Secondary)),
-//             false,
-//             128.0,
-//             Some(Box::new(move |ctx: &mut Context| {
-//                 ctx.open_photo_picker(sender.clone());
-//             })),
-//         );
 
 #[derive(Debug, Component)]
 struct QRGuide(Stack, Option<RoundedRectangle>, RoundedRectangle, Option<Message>);
@@ -152,16 +131,3 @@ fn decode_image(img_rgba: RgbaImage, mut decoder: Quirc) -> Option<String> {
     None
 }
 
-// pub fn mirrored_from(image: &RgbaImage) -> RgbaImage {
-//     let (width, height) = image.dimensions();
-//     let mut mirrored = RgbaImage::new(width, height);
-
-//     for y in 0..height {
-//         for x in 0..width {
-//             let pixel: image::Rgba<u8> = *image.get_pixel(x, y);
-//             mirrored.put_pixel(width - 1 - x, y, pixel);
-//         }
-//     }
-
-//     mirrored
-// }

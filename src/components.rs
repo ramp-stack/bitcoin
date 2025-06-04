@@ -8,5 +8,5 @@ pub mod numeric_keypad;
 pub use numeric_keypad::*;
 pub mod qr_code;
 pub use qr_code::*;
-pub mod qr_scanner;
-pub use qr_scanner::*;
+// pub mod qr_scanner;
+// pub use qr_scanner::*;

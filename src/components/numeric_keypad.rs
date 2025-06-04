@@ -1,5 +1,16 @@
-use rust_on_rails::prelude::*;
-use pelican_ui::prelude::*;
+use pelican_ui::events::{OnEvent, KeyboardState, KeyboardEvent, Key, NamedKey, SmolStr};
+use pelican_ui::drawable::{Drawable, Component};
+use pelican_ui::layout::{Area, SizeRequest, Layout};
+use pelican_ui::{Context, Component};
+
+use pelican_ui_std::{
+    Padding,
+    Size,
+    Offset,
+    Row,
+    Button,
+    Column,
+};
 
 /// A numeric keypad component with four rows of buttons.
 #[derive(Debug, Component)]

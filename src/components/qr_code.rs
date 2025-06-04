@@ -1,10 +1,22 @@
-use rust_on_rails::prelude::*;
-use pelican_ui::prelude::*;
+use pelican_ui::events::OnEvent;
+use pelican_ui::drawable::{Drawable, Component, ShapeType, Image};
+use pelican_ui::layout::{Area, SizeRequest, Layout};
+use pelican_ui::{Context, Component};
+
+use pelican_ui_std::{
+    Brand,
+    RoundedRectangle,
+    Padding,
+    Size,
+    Offset,
+    Stack,
+    Bin,
+};
 
 use image::{Rgb, RgbImage, DynamicImage};
 use imageproc::drawing::{draw_filled_circle_mut, draw_filled_rect_mut};
 use imageproc::rect::Rect;
-use qrcode::{QrCode, EcLevel, Version};
+use qrcode::{QrCode, EcLevel};
 
 /// A component representing a QR code with a branded logo.
 #[derive(Debug, Component)]
@@ -23,7 +35,7 @@ impl QRCode {
     /// let qr_code = QRCode::new(ctx, "https://example.com");
     /// ```
     pub fn new(ctx: &mut Context, data: &str) -> Self {
-        let theme = &ctx.get::<PelicanUI>().theme;
+        let theme = &ctx.theme;
         let (app_icon, color) = (theme.brand.app_icon.clone(), theme.colors.shades.white);
         let qr_size = 300.0;
         let logo_size = 72.0;
@@ -36,7 +48,7 @@ impl QRCode {
                 Stack(Offset::Center, Offset::Center, Size::Static(qr_size), Size::Static(qr_size), Padding::default()),
                 RoundedRectangle::new(0.0, 8.0, color),
             ),
-            Image{shape: ShapeType::RoundedRectangle(0.0, (qr_size - 16.0, qr_size - 16.0), 8.0), image: ctx.add_image(img), color: None},
+            Image{shape: ShapeType::RoundedRectangle(0.0, (qr_size - 16.0, qr_size - 16.0), 8.0), image: ctx.assets.add_image(img), color: None},
             // QRModules::new(ctx, data, qr_size, logo_size),  - NO CUSTOM STYLIZATION FOR THIS RELEASE
             Brand::new(app_icon, (logo_size, logo_size))
         )

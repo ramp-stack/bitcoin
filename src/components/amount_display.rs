@@ -1,6 +1,20 @@
-use rust_on_rails::prelude::*;
-use pelican_ui::prelude::*;
-use pelican_ui::prelude::Text as Text;
+use pelican_ui::events::{Event, OnEvent, Key, NamedKey, KeyboardState, KeyboardEvent};
+use pelican_ui::drawable::{Drawable, Component, Align, Span, Image};
+use pelican_ui::layout::{Area, SizeRequest, Layout};
+use pelican_ui::{Context, Component};
+
+use pelican_ui_std::{
+    TextStyle,
+    Text,
+    Row,
+    IS_MOBILE,
+    Padding,
+    Size,
+    Offset,
+    Column,
+    Stack,
+    Icon
+};
 
 /// A component displaying an amount in both USD and BTC formats.
 ///
@@ -29,7 +43,7 @@ impl AmountDisplay {
     /// let amount_display = AmountDisplay::new(ctx);
     /// ```
     pub fn new(ctx: &mut Context, text: &str, subtext: &str) -> Self {
-        let font_size = ctx.get::<PelicanUI>().theme.fonts.size.title;
+        let font_size = ctx.theme.fonts.size.title;
 
         AmountDisplay (
             Column::new(16.0, Offset::Center, Size::Fit, Padding(16.0, 64.0, 16.0, 64.0)),
@@ -52,19 +66,19 @@ impl OnEvent for SubText {}
 
 impl SubText {
     fn new(ctx: &mut Context, btc: &str) -> Self {
-        let text_size = ctx.get::<PelicanUI>().theme.fonts.size.lg;
+        let text_size = ctx.theme.fonts.size.lg;
         SubText(Row::center(8.0), None, Text::new(ctx, btc, TextStyle::Secondary, text_size, Align::Left), true)
     }
 
     fn set_error(&mut self, ctx: &mut Context, err: &str) {
-        let theme = &ctx.get::<PelicanUI>().theme;
+        let theme = &ctx.theme;
         let (color, text_size) = (theme.colors.status.danger, theme.fonts.size.lg);
         self.1 = Some(Icon::new(ctx, "error", color, 24.0));
         self.2 = Text::new(ctx, err, TextStyle::Error, text_size, Align::Left);
     }
 
     fn set_subtext(&mut self, ctx: &mut Context, txt: &str) {
-        let text_size = ctx.get::<PelicanUI>().theme.fonts.size.lg;
+        let text_size = ctx.theme.fonts.size.lg;
         self.1 = None;
         self.2 = Text::new(ctx, txt, TextStyle::Secondary, text_size, Align::Left);
     }
@@ -170,7 +184,7 @@ impl OnEvent for AmountInputContent {
     fn on_event(&mut self, ctx: &mut Context, event: &mut dyn Event) -> bool {
         if let Some(KeyboardEvent{state: KeyboardState::Pressed, key}) = event.downcast_ref() {
             // Get font sizes from theme
-            let font_size = ctx.get::<PelicanUI>().theme.fonts.size;
+            let font_size = ctx.theme.fonts.size;
             // Remove commas from input string
             let mut t = self.1.amount().text.replace(",", "");
             // Count digits (excluding dots and commas)
@@ -273,7 +287,7 @@ impl OnEvent for Display {}
 
 impl Display {
     pub fn new(ctx: &mut Context, num: &str) -> Self {
-        let theme = &ctx.get::<PelicanUI>().theme;
+        let theme = &ctx.theme;
         let font_size = theme.fonts.size.title;
         let (mc, dc) = (theme.colors.text.heading, theme.colors.text.secondary);
 

@@ -1,21 +1,17 @@
-use rust_on_rails::prelude::*;
-use pelican_ui::prelude::*;
-use crate::*;
+use pelican_ui::Context;
 
-pub trait DataItemBitcoin {
-    fn confirm_address(ctx: &mut Context, address: &str, to_edit_address: impl FnMut(&mut Context) + 'static) -> Self;
+use pelican_ui_std::{
+    DataItem,
+    Timestamp,
+    Button,
+};
 
-    fn confirm_amount(
-        ctx: &mut Context, btc: f64, price: f64, fee: f64, is_priority: bool, 
-        to_edit_speed: impl FnMut(&mut Context) + 'static,  to_edit_amount: impl FnMut(&mut Context) + 'static
-    ) -> Self;
+use crate::{NANS, format_usd, format_nano_btc};
 
-    fn received_tx(ctx: &mut Context, timestamp: Timestamp, btc: f64, price: f64, address: &str) -> Self;
-    fn sent_tx(ctx: &mut Context, timestamp: Timestamp, btc: f64, price: f64, fee: f64, address: &str) -> Self;
-}
+pub struct DataItemBitcoin;
 
-impl DataItemBitcoin for DataItem {
-    fn confirm_address(ctx: &mut Context, address: &str, to_edit_address: impl FnMut(&mut Context) + 'static) -> Self {
+impl DataItemBitcoin {
+    pub fn confirm_address(ctx: &mut Context, address: &str, to_edit_address: impl FnMut(&mut Context) + 'static) -> DataItem {
         let edit_address = Button::secondary(ctx, Some("edit"), "Edit Address", None, to_edit_address);
 
         DataItem::new(ctx, None, "Confirm address", Some(address),
@@ -24,11 +20,11 @@ impl DataItemBitcoin for DataItem {
         )
     }
 
-    fn confirm_amount(
+    pub fn confirm_amount(
         ctx: &mut Context, btc: f64, price: f64, fee: f64, is_priority: bool,
         to_edit_speed: impl FnMut(&mut Context) + 'static, 
         to_edit_amount: impl FnMut(&mut Context) + 'static
-    ) -> Self {
+    ) -> DataItem {
         let speed = match is_priority {
             false => "Standard (~2 hours)",
             true => "Priority (~30 minutes)"
@@ -51,7 +47,7 @@ impl DataItemBitcoin for DataItem {
         DataItem::new(ctx, None, "Confirm amount", None, None, Some(details), Some(vec![edit_amount, edit_speed]))
     }
 
-    fn received_tx(ctx: &mut Context, timestamp: Timestamp, btc: f64, price: f64, address: &str) -> Self {
+    pub fn received_tx(ctx: &mut Context, timestamp: Timestamp, btc: f64, price: f64, address: &str) -> DataItem {
         let (date, time) = (timestamp.date(), timestamp.time());
         let nano_btc = &format_nano_btc(btc * NANS);
         let usd = &format_usd(btc*price);
@@ -69,7 +65,7 @@ impl DataItemBitcoin for DataItem {
         DataItem::new(ctx, None, "Transaction details", None, None, Some(details), None)
     }
 
-    fn sent_tx(ctx: &mut Context, timestamp: Timestamp, btc: f64, price: f64, fee: f64, address: &str) -> Self {
+    pub fn sent_tx(ctx: &mut Context, timestamp: Timestamp, btc: f64, price: f64, fee: f64, address: &str) -> DataItem {
         let (date, time) = (timestamp.date(), timestamp.time());
         let nano_btc = &format_nano_btc(btc * NANS);
         let usd_fmt = &format_usd(btc*price);
