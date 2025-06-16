@@ -4,6 +4,7 @@ use chrono::{DateTime, Local};
 
 pub mod components;
 pub mod events;
+pub mod pages;
 
 pub const NANS: f64 = 1_000_000_000.0;
 
