@@ -269,11 +269,11 @@ impl OnEvent for AmountInputContent {
 
             // Apply font size and line height to amount and zeros and currency symbol
             self.1.amount().font_size = size;
-            self.1.amount().line_height = size * 1.25;
+            self.1.amount().line_height = Some(size * 1.25);
             self.1.zeros().font_size = size;
-            self.1.zeros().line_height = size * 1.25;
+            self.1.zeros().line_height = Some(size * 1.25);
             self.1.currency().font_size = size;
-            self.1.currency().line_height = size * 1.25;
+            self.1.currency().line_height = Some(size * 1.25);
 
             self.validate(ctx)
         }  
