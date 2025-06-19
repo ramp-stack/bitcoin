@@ -1,7 +1,8 @@
 use pelican_ui::events::{OnEvent, Event, TickEvent};
 use pelican_ui::drawable::{Drawable, Component, ShapeType, Image, Align};
 use pelican_ui::layout::{Area, SizeRequest, Layout};
-use pelican_ui::{Context, Component, Camera, CameraError};
+use pelican_ui::hardware::{Camera, CameraError};
+use pelican_ui::{Context, Component};
 
 use pelican_ui_std::{
     RoundedRectangle,
