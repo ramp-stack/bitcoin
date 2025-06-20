@@ -1,23 +1,19 @@
-use pelican_ui::runtime::{Channel, Service, Services, ThreadContext, async_trait, Error, BackgroundTask, ServiceList, BackgroundList};
-use pelican_ui::hardware::{self, Cache};
+use pelican_ui::runtime::{Service, Services, ThreadContext, async_trait, Error, ServiceList, BackgroundList};
+use pelican_ui::hardware::{self};
 use pelican_ui::State;
 
-use bdk_wallet::{KeychainKind, ChangeSet, Update, LoadParams};
-use bdk_wallet::descriptor::template::Bip86;
-use bdk_wallet::bitcoin::bip32::Xpriv;
-use bdk_wallet::bitcoin::{Amount, Network, Txid, FeeRate};
-use bdk_wallet::{PersistedWallet, WalletPersister};
-use bdk_wallet::chain::{Merge, ChainPosition, Anchor};
-use bdk_esplora::esplora_client::Builder;
-use bdk_esplora::EsploraExt;
+// use bdk_wallet::{KeychainKind, ChangeSet, Update, LoadParams};
+// use bdk_wallet::descriptor::template::Bip86;
+// use bdk_wallet::bitcoin::bip32::Xpriv;
+// use bdk_wallet::bitcoin::{Amount, Network, Txid, FeeRate};
+// use bdk_wallet::{PersistedWallet, WalletPersister};
+// use bdk_wallet::chain::{Merge, ChainPosition, Anchor};
+// use bdk_esplora::esplora_client::Builder;
+// use bdk_esplora::EsploraExt;
 
-use std::collections::BTreeMap;
 use std::time::Duration;
-use std::any::TypeId;
-use std::pin::Pin;
 
 use serde::{Serialize, Deserialize};
-use serde_json::Value;
 
 pub mod price;
 pub use price::Price;
@@ -60,7 +56,7 @@ impl Service for BDKService {
     type Send = Response;
     type Receive = Request;
 
-    async fn new(ctx: &mut hardware::Context) -> Self {
+    async fn new(_ctx: &mut hardware::Context) -> Self {
         BDKService
     }
 
