@@ -1,5 +1,5 @@
 use pelican_ui::runtime::{Service, ThreadContext, async_trait, Error, Services};
-use pelican_ui::hardware;
+use pelican_ui::hardware::{self, Cache};
 use pelican_ui::State;
 
 use std::collections::BTreeMap;
@@ -43,8 +43,8 @@ impl Service for PriceService {
 }
 impl Services for PriceService {}
 impl PriceService {
-    pub async fn from_timestamp(hardware: &mut hardware::Context, timestamp: DateTime<Utc>) -> Result<f64, Error> {
-        let mut cache: BTreeMap<DateTime<Utc>, f64> = hardware.cache.get("PriceCache").await;
+    pub async fn from_timestamp(hcache: &mut Cache, timestamp: DateTime<Utc>) -> Result<f64, Error> {
+        let mut cache: BTreeMap<DateTime<Utc>, f64> = hcache.get("PriceCache").await;
         Ok(match cache.get(&timestamp) {
             Some(price) => *price,
             None => {
@@ -56,7 +56,7 @@ impl PriceService {
                                     .as_str().ok_or(PriceError)?;
                 let price = price_str.parse()?;
                 cache.insert(timestamp, price);
-                hardware.cache.set("PriceCache", cache).await;
+                hcache.set("PriceCache", cache).await;
                 price
             }
         })

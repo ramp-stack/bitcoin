@@ -2,6 +2,7 @@ use bdk_wallet::bitcoin::{Amount, Txid};
 use serde::{Serialize, Deserialize};
 use chrono::{DateTime, Local};
 
+pub mod wallet;
 pub mod components;
 pub mod events;
 pub mod pages;

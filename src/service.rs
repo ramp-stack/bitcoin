@@ -2,7 +2,7 @@ use pelican_ui::runtime::{Channel, Service, Services, ThreadContext, async_trait
 use pelican_ui::hardware::{self, Cache};
 use pelican_ui::State;
 
-use bdk_wallet::{Wallet, KeychainKind, ChangeSet, Update, LoadParams};
+use bdk_wallet::{KeychainKind, ChangeSet, Update, LoadParams};
 use bdk_wallet::descriptor::template::Bip86;
 use bdk_wallet::bitcoin::bip32::Xpriv;
 use bdk_wallet::bitcoin::{Amount, Network, Txid, FeeRate};
@@ -19,11 +19,13 @@ use std::pin::Pin;
 use serde::{Serialize, Deserialize};
 use serde_json::Value;
 
-mod price;
+pub mod price;
 pub use price::Price;
 
 mod sync;
-use sync::{MemoryPersister, BDKSync};
+use sync::BDKSync;
+
+use crate::wallet::Wallet;
 
 #[derive(Debug)]
 pub struct BDKError;
@@ -69,17 +71,16 @@ impl Service for BDKService {
     }
 
     async fn run(&mut self, ctx: &mut ThreadContext<Self::Send, Self::Receive>) -> Result<Option<Duration>, Error> {
-        let mut persister = MemoryPersister::from_cache(&mut ctx.hardware.cache).await;
-        if let Some(mut wallet) = PersistedWallet::load(&mut persister, LoadParams::new()).ok().and_then(|r| r) {
-            while let Some((id, request)) = ctx.get_request() {
-                match request {
-                    Request::GetNewAddress => {
-                        let address = wallet.reveal_next_address(KeychainKind::External);
-                        ctx.respond(id, Response::NewAddress(address.address.to_string()));
-                    }
+        let mut wallet = Wallet::new(&mut ctx.hardware.cache).await?;
+        while let Some((id, request)) = ctx.get_request() {
+            match request {
+                Request::GetNewAddress => {
+                    let address = wallet.get_new_address();
+                    ctx.respond(id, Response::NewAddress(address.to_string()));
                 }
             }
         }
+        wallet.cache(&mut ctx.hardware.cache).await?;
         Ok(Some(Duration::ZERO))
     }
 
