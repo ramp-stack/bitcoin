@@ -53,12 +53,13 @@ pub struct BDKSync(PersistedWallet<MemoryPersister>);
 impl BackgroundTask for BDKSync {
     async fn new(ctx: &mut hardware::Context) -> Self {
         //TODO: check cloud
-        let key = ctx.cache.get::<Option<Xpriv>>("WalletKey").await.unwrap_or(
-            Xpriv::new_master(Network::Bitcoin, &secp256k1::SecretKey::new(&mut secp256k1::rand::rng()).secret_bytes()).unwrap()
-        );
-        ctx.cache.set("WalletKey", Some(key)).await;
+        let key = if let Some(k) = ctx.cache.get::<Option<Xpriv>>("WalletKey").await {k} else {
+            let key = Xpriv::new_master(Network::Bitcoin, &secp256k1::SecretKey::new(&mut secp256k1::rand::rng()).secret_bytes()).unwrap();
+            ctx.cache.set("WalletKey", Some(key)).await;
+            key
+        };
 
-        let mut db = ctx.cache.get("MemoryPersister").await; 
+        let mut db = MemoryPersister::from_cache(&mut ctx.cache).await;
 
         let ext = Bip86(key, KeychainKind::External);
         let int = Bip86(key, KeychainKind::Internal);
@@ -79,6 +80,7 @@ impl BackgroundTask for BDKSync {
                 .expect("wallet")
             }
         };
+        db.cache(&mut ctx.cache).await;
         
         BDKSync(wallet)
     }
@@ -87,7 +89,7 @@ impl BackgroundTask for BDKSync {
         let mut persister: MemoryPersister = ctx.cache.get("MemoryPersister").await;
         let mut wallet = PersistedWallet::load(&mut persister, LoadParams::new()).or(Err(BDKError))?.ok_or(BDKError)?;
 
-        let scan_request = wallet.start_full_scan().build();
+        let scan_request = wallet.start_full_scan().inspect(|k, i, s| println!("scaning: {:?}, {}, {:?}", k, i, s)).build();
 
         let builder = Builder::new("https://blockstream.info/api");
         let blocking_client = builder.build_blocking();

@@ -70,12 +70,13 @@ impl Service for BDKService {
 
     async fn run(&mut self, ctx: &mut ThreadContext<Self::Send, Self::Receive>) -> Result<Option<Duration>, Error> {
         let mut persister = MemoryPersister::from_cache(&mut ctx.hardware.cache).await;
-        let mut wallet = PersistedWallet::load(&mut persister, LoadParams::new()).or(Err(BDKError))?.ok_or(BDKError)?;
-        while let Some((id, request)) = ctx.get_request() {
-            match request {
-                Request::GetNewAddress => {
-                    let address = wallet.reveal_next_address(KeychainKind::External);
-                    ctx.respond(id, Response::NewAddress(address.address.to_string()));
+        if let Some(mut wallet) = PersistedWallet::load(&mut persister, LoadParams::new()).ok().and_then(|r| r) {
+            while let Some((id, request)) = ctx.get_request() {
+                match request {
+                    Request::GetNewAddress => {
+                        let address = wallet.reveal_next_address(KeychainKind::External);
+                        ctx.respond(id, Response::NewAddress(address.address.to_string()));
+                    }
                 }
             }
         }
