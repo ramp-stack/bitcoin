@@ -28,6 +28,10 @@ use pelican_ui_std::{
     NavigateEvent
 };
 
+use crate::service::Address as BitcoinAddress;
+use crate::service::{Request, BDKService};
+use crate::plugin::BDKPlugin;
+
 // use crate::bdk::{BDKPlugin, SendAddress, SendAmount, SendFee, CurrentTransaction};
 // use crate::bdk::parse_btc_uri;
 // use crate::MSGPlugin;
@@ -39,7 +43,7 @@ impl AppPage for BitcoinHome {
     fn has_nav(&self) -> bool { true }
     fn navigate(self: Box<Self>, ctx: &mut Context, index: usize) -> Result<Box<dyn AppPage>, Box<dyn AppPage>> { 
         match index {
-            0 => Ok(Box::new(Address::new(ctx))),
+            0 => Ok(Box::new(Address::new(ctx, None))),
             1 => Ok(Box::new(Receive::new(ctx))),
             _ => Err(self),
         }
@@ -66,7 +70,7 @@ impl BitcoinHome {
         //     let transactions = transactions.into_iter().map(|t| {
         //         let txid = t.txid;
         //         match t.datetime {
-        //             Some(stamp) => ListItem::crate(
+        //             Some(stamp) => ListItem::bitcoin(
         //                 ctx, t.is_received, t.amount.to_btc(), t.price, Timestamp::new(stamp),
         //                 move |ctx: &mut Context| {
         //                     // let tx = ctx.get::<BDKPlugin>().find_transaction(txid).unwrap();
@@ -74,7 +78,7 @@ impl BitcoinHome {
         //                     // ViewTransaction::navigate(ctx);
         //                 }
         //             ),
-        //             None => ListItem::crate_sending(
+        //             None => ListItem::bitcoin_sending(
         //                 ctx, t.amount.to_btc(), t.price, 
         //                 move |ctx: &mut Context| {
         //                     // let tx = ctx.get::<BDKPlugin>().find_transaction(txid).unwrap();
@@ -98,8 +102,8 @@ impl BitcoinHome {
 impl OnEvent for BitcoinHome {
     fn on_event(&mut self, ctx: &mut Context, event: &mut dyn Event) -> bool {
         if let Some(TickEvent) = event.downcast_ref::<TickEvent>() {
-            // let bdk = ctx.get::<BDKPlugin>();
-            let (btc, price) = (0.0, 0.0); //(bdk.get_balance().to_btc(), bdk.get_price());
+            let (btc, price) = (BDKPlugin::balance(ctx), BDKPlugin::price(ctx));
+            println!("{:?} {:?}", btc, price);
             let items = &mut *self.1.content().items();
             let display: &mut AmountDisplay = items[0].as_any_mut().downcast_mut::<AmountDisplay>().unwrap();
             *display.usd() = format_usd(btc*price).to_string();
@@ -111,15 +115,15 @@ impl OnEvent for BitcoinHome {
 }
 
 #[derive(Debug, Component)]
-pub struct Address(Stack, Page, #[skip] ButtonState);
+pub struct Address(Stack, Page, #[skip] ButtonState, #[skip] Option<String>);
 
 impl AppPage for Address {
     fn has_nav(&self) -> bool { false }
     fn navigate(self: Box<Self>, ctx: &mut Context, index: usize) -> Result<Box<dyn AppPage>, Box<dyn AppPage>> { 
         match index {
             0 => Ok(Box::new(BitcoinHome::new(ctx))),
-            1 => Ok(Box::new(Amount::new(ctx))),
-            2 => Ok(Box::new(ScanQR::new(ctx))),
+            1 => Ok(Box::new(Amount::new(ctx, self.3.clone()))),
+            2 => Ok(Box::new(ScanQR::new(ctx, self.3.clone()))),
             3 => Ok(Box::new(SelectContact::new(ctx))),
             _ => Err(self)
         }
@@ -127,12 +131,10 @@ impl AppPage for Address {
 }
 
 impl Address {
-    fn new(ctx: &mut Context) -> Self {
+    fn new(ctx: &mut Context, address: Option<String>) -> Self {
         let button = Button::disabled(ctx, "Continue", |ctx: &mut Context| ctx.trigger_event(NavigateEvent(1)));
-
         let icon_button = None::<(&'static str, fn(&mut Context, &mut String))>;
-        let address_ref: Option<&str> = None; // address.get().as_ref().map(|x| x.as_str());
-        let address_input = TextInput::new(ctx, address_ref, None, "Bitcoin address...", None, icon_button);
+        let address_input = TextInput::new(ctx, None, None, "Bitcoin address...", None, icon_button);
 
         let paste = Button::secondary(ctx, Some("paste"), "Paste Clipboard", None, move |ctx: &mut Context| {
             let data = ctx.hardware.paste();
@@ -145,11 +147,11 @@ impl Address {
         let quick_actions = QuickActions::new(vec![paste, scan_qr, contact]);
         let back = IconButton::navigation(ctx, "left", |ctx: &mut Context| ctx.trigger_event(NavigateEvent(0)));
 
-        let header = Header::stack(ctx, Some(back), "Send crate", None);
+        let header = Header::stack(ctx, Some(back), "Send bitcoin", None);
         let bumper = Bumper::single_button(ctx, button);
         let content = Content::new(Offset::Start, vec![Box::new(address_input), Box::new(quick_actions)]);
 
-        Address(Stack::default(), Page::new(header, content, Some(bumper)), ButtonState::Default)
+        Address(Stack::default(), Page::new(header, content, Some(bumper)), ButtonState::Default, address)
     }
 }
 
@@ -161,7 +163,7 @@ impl OnEvent for Address {
 
             if !input_address.is_empty() {
                 // let (address, amount) = ("", None);// parse_btc_uri(input_address);
-                *input.value() = "address".to_string();
+                // *input.value() = "address".to_string(); // PROBLEM
                 // let address = SendAddress::new(address.to_string());
                 // if let Some(b) = amount { ctx.state().set(&SendAmount::new(b)) }
 
@@ -182,27 +184,28 @@ impl OnEvent for Address {
 }
 
 #[derive(Debug, Component)]
-pub struct ScanQR(Stack, Page);
+pub struct ScanQR(Stack, Page, #[skip] Option<String>);
 
 impl AppPage for ScanQR {
     fn has_nav(&self) -> bool { false }
     fn navigate(self: Box<Self>, ctx: &mut Context, _index: usize) -> Result<Box<dyn AppPage>, Box<dyn AppPage>> {
-        Ok(Box::new(Address::new(ctx)))
+        Ok(Box::new(Address::new(ctx, self.2)))
     }
 }
 
 impl ScanQR {
-    fn new(ctx: &mut Context) -> Self {
+    fn new(ctx: &mut Context, address: Option<String>) -> Self {
         let content = Content::new(Offset::Center, vec![Box::new(QRCodeScanner::new(ctx))]);
         let back = IconButton::navigation(ctx, "left", |ctx: &mut Context| ctx.trigger_event(NavigateEvent(0)));
         let header = Header::stack(ctx, Some(back), "Scan QR Code", None);
-        ScanQR(Stack::default(), Page::new(header, content, None))
+        ScanQR(Stack::default(), Page::new(header, content, None), address)
     }
 }
 
 impl OnEvent for ScanQR {
     fn on_event(&mut self, ctx: &mut Context, event: &mut dyn Event) -> bool {
-        if let Some(QRCodeScannedEvent(_data)) = event.downcast_ref::<QRCodeScannedEvent>() {
+        if let Some(QRCodeScannedEvent(data)) = event.downcast_ref::<QRCodeScannedEvent>() {
+            self.2 = Some(data.to_string());
             ctx.trigger_event(NavigateEvent(0));
         }
         true
@@ -232,13 +235,13 @@ impl SelectContact {
 }
 
 #[derive(Debug, Component)]
-pub struct Amount(Stack, Page, #[skip] ButtonState);
+pub struct Amount(Stack, Page, #[skip] ButtonState, #[skip] Option<String>);
 
 impl AppPage for Amount {
     fn has_nav(&self) -> bool { false }
     fn navigate(self: Box<Self>, ctx: &mut Context, index: usize) -> Result<Box<dyn AppPage>, Box<dyn AppPage>> {
         match index {
-            0 => Ok(Box::new(Address::new(ctx))),
+            0 => Ok(Box::new(Address::new(ctx, self.3.clone()))),
             1 => Ok(Box::new(Speed::new(ctx))),
             _ => Err(self)
         }
@@ -246,7 +249,7 @@ impl AppPage for Amount {
 }
 
 impl Amount {
-    pub fn new(ctx: &mut Context) -> Self {
+    pub fn new(ctx: &mut Context, address: Option<String>) -> Self {
 
         let price = 0.0; //ctx.get::<BDKPlugin>().get_price();
         // let amount = ctx.state().get::<SendAmount>();
@@ -293,7 +296,7 @@ impl Amount {
         let back = IconButton::navigation(ctx, "left", |ctx: &mut Context| ctx.trigger_event(NavigateEvent(0)));
         let header = Header::stack(ctx, Some(back), "Bitcoin amount", None);
 
-        Amount(Stack::default(), Page::new(header, content, Some(bumper)), ButtonState::Default)
+        Amount(Stack::default(), Page::new(header, content, Some(bumper)), ButtonState::Default, address)
     }
 }
 
@@ -318,7 +321,7 @@ impl AppPage for Speed {
     fn has_nav(&self) -> bool { false }
     fn navigate(self: Box<Self>, ctx: &mut Context, index: usize) -> Result<Box<dyn AppPage>, Box<dyn AppPage>> {
         match index {
-            0 => Ok(Box::new(Amount::new(ctx))),
+            0 => Ok(Box::new(Amount::new(ctx, None))),
             1 => Ok(Box::new(Confirm::new(ctx))),
             _ => Err(self)
         }
@@ -380,8 +383,8 @@ impl AppPage for Confirm {
         match index {
             0 => Ok(Box::new(Speed::new(ctx))),
             1 => Ok(Box::new(Success::new(ctx))),
-            2 => Ok(Box::new(Address::new(ctx))),
-            3 => Ok(Box::new(Amount::new(ctx))),
+            2 => Ok(Box::new(Address::new(ctx, None))),
+            3 => Ok(Box::new(Amount::new(ctx, None))),
             _ => Err(self)
         }
     }
@@ -444,7 +447,7 @@ impl Success {
 
         let (text, splash) = match contact {
             Some(c) => ("You sent $10.00 to Ella Couch", Box::new(Avatar::new(ctx, c, None, false, 96.0, None)) as Box<dyn Drawable>),
-            None => ("You sent $10.00", Box::new(Icon::new(ctx, "crate", color, 96.0)) as Box<dyn Drawable>)
+            None => ("You sent $10.00", Box::new(Icon::new(ctx, "bitcoin", color, 96.0)) as Box<dyn Drawable>)
         };
 
         let text = Text::new(ctx, text, TextStyle::Heading, text_size, Align::Left);
@@ -471,19 +474,20 @@ impl AppPage for Receive {
 impl Receive {
     fn new(ctx: &mut Context) -> Self {
         let text_size = ctx.theme.fonts.size.md;
-        let adrs = String::new(); //ctx.get::<BDKPlugin>().get_new_address().to_string();
-        let qr_code = QRCode::new(ctx, &adrs);
-        let text = Text::new(ctx, "Scan to receive crate.", TextStyle::Secondary, text_size, Align::Left);
+        let address = BDKPlugin::address(ctx);
+
+        let qr_code = QRCode::new(ctx, &address);
+        let text = Text::new(ctx, "Scan to receive bitcoin.", TextStyle::Secondary, text_size, Align::Left);
         let content = Content::new(Offset::Center, vec![Box::new(qr_code), Box::new(text)]);
 
         let button = match IS_MOBILE {
-            true => Button::primary(ctx, "Share", move |_ctx: &mut Context| {}), // ctx.share(&adrs.clone())) // ctx.share(&adrs.clone(), &image_bytes) 
-            false => Button::primary(ctx, "Copy Address", move |_ctx: &mut Context| {})// ctx.set_clipboard(adrs.clone()) )
+            true => Button::primary(ctx, "Share", move |ctx: &mut Context| ctx.hardware.share(&address.clone())), 
+            false => Button::primary(ctx, "Copy Address", move |ctx: &mut Context| ctx.hardware.copy(address.clone()))
         };
 
         let bumper = Bumper::single_button(ctx, button);
         let close = IconButton::navigation(ctx, "left", |ctx: &mut Context| ctx.trigger_event(NavigateEvent(0)));
-        let header = Header::stack(ctx, Some(close), "Receive crate", None);
+        let header = Header::stack(ctx, Some(close), "Receive Bitcoin", None);
         Receive(Stack::default(), Page::new(header, content, Some(bumper)))
     }
 }
@@ -503,12 +507,12 @@ impl Receive {
 //         let (title, data_item) = match tx.is_received {
 //             true => {
 //                 let data_item = DataItem::received_tx(ctx, timestamp, btc, tx.price, &address);
-//                 ("Received crate", data_item)
+//                 ("Received bitcoin", data_item)
 //             }
 //             false => {
 //                 let fee = tx.fee.unwrap().to_btc().to_string().parse::<f64>().unwrap()*tx.price;
 //                 let data_item = DataItem::sent_tx(ctx, timestamp, btc, tx.price, fee, &address);
-//                 ("Sent crate", data_item)
+//                 ("Sent bitcoin", data_item)
 //             }
 //         };
 

@@ -7,6 +7,7 @@ pub mod components;
 pub mod events;
 pub mod pages;
 pub mod service;
+pub mod plugin;
 
 pub const NANS: f64 = 1_000_000_000.0;
 
