@@ -56,7 +56,7 @@ impl PriceService {
                                     .as_str().ok_or(PriceError)?;
                 let price = price_str.parse()?;
                 cache.insert(timestamp, price);
-                hcache.set("PriceCache", cache).await;
+                hcache.set("PriceCache", &cache).await;
                 price
             }
         })

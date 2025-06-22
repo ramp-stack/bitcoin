@@ -28,7 +28,7 @@ impl BackgroundTask for BDKSync {
         self.0.scan().await?;
 
         let transactions = self.0.transactions(&mut ctx.cache).await?;
-        ctx.cache.set("Transactions", transactions).await;
+        ctx.cache.set("Transactions", &transactions).await;
 
         self.0.cache(&mut ctx.cache).await?;
         Ok(Some(Duration::from_secs(5)))

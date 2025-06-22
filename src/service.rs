@@ -31,7 +31,7 @@ impl std::fmt::Display for BDKError {
 }
 
 #[derive(Serialize, Deserialize, Default, Clone, Debug)]
-pub struct Address(String);
+pub struct Address(pub String);
 
 #[derive(Serialize, Deserialize)]
 pub enum Request {
@@ -43,7 +43,7 @@ pub enum Response {
     NewAddress(String)
 }
 
-pub struct BDKService;
+pub struct BDKService(bool);
 impl Services for BDKService {
     fn services() -> ServiceList {
         let mut services = ServiceList::default();
@@ -57,7 +57,7 @@ impl Service for BDKService {
     type Receive = Request;
 
     async fn new(_ctx: &mut hardware::Context) -> Self {
-        BDKService
+        BDKService(false)
     }
 
     fn background_tasks() -> BackgroundList {
@@ -68,6 +68,12 @@ impl Service for BDKService {
 
     async fn run(&mut self, ctx: &mut ThreadContext<Self::Send, Self::Receive>) -> Result<Option<Duration>, Error> {
         let mut wallet = Wallet::new(&mut ctx.hardware.cache).await?;
+        if !self.0 {
+            println!("Got Address!");
+            self.0 = true;
+            let address = wallet.get_new_address();
+            ctx.callback(Response::NewAddress(address.to_string()));
+        }
         while let Some((id, request)) = ctx.get_request() {
             match request {
                 Request::GetNewAddress => {

@@ -35,7 +35,7 @@ impl Wallet {
                 //TODO: check cloud
                 let key = if let Some(k) = cache.get::<Option<Xpriv>>("WalletKey").await {k} else {
                     let key = Xpriv::new_master(Network::Bitcoin, &secp256k1::SecretKey::new(&mut secp256k1::rand::rng()).secret_bytes()).unwrap();
-                    cache.set("WalletKey", Some(key)).await;
+                    cache.set("WalletKey", &Some(key)).await;
                     key
                 };
                 bdk_wallet::Wallet::create(Bip86(key, KeychainKind::External), Bip86(key, KeychainKind::Internal))
@@ -51,7 +51,7 @@ impl Wallet {
         self.0.persist(&mut self.1)?;
         let persister: MemoryPersister = cache.get("MemoryPersister").await;
         self.1.0.merge(persister.0);
-        cache.set("MemoryPersister", self.1.clone()).await;
+        cache.set("MemoryPersister", &self.1.clone()).await;
         Ok(())
     }
 
