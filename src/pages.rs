@@ -57,7 +57,7 @@ impl BitcoinHome {
         let header = Header::home(ctx, "Wallet");
         let bumper = Bumper::double_button(ctx, receive, send);
         let content = Content::new(Offset::Center, vec![Box::new(AmountDisplay::new(ctx, "$0.00", "0 nb")) as Box<dyn Drawable>]);
-        BitcoinHome(Stack::center(), Page::new(header, content, Some(bumper)))
+        BitcoinHome(Stack::center(), Page::new(Some(header), content, Some(bumper)))
     }
 
     fn update_transactions(&mut self, _ctx: &mut Context) {
@@ -151,7 +151,7 @@ impl Address {
         let bumper = Bumper::single_button(ctx, button);
         let content = Content::new(Offset::Start, vec![Box::new(address_input), Box::new(quick_actions)]);
 
-        Address(Stack::default(), Page::new(header, content, Some(bumper)), ButtonState::Default, address)
+        Address(Stack::default(), Page::new(Some(header), content, Some(bumper)), ButtonState::Default, address)
     }
 }
 
@@ -198,7 +198,7 @@ impl ScanQR {
         let content = Content::new(Offset::Center, vec![Box::new(QRCodeScanner::new(ctx))]);
         let back = IconButton::navigation(ctx, "left", |ctx: &mut Context| ctx.trigger_event(NavigateEvent(0)));
         let header = Header::stack(ctx, Some(back), "Scan QR Code", None);
-        ScanQR(Stack::default(), Page::new(header, content, None), address)
+        ScanQR(Stack::default(), Page::new(Some(header), content, None), address)
     }
 }
 
@@ -230,7 +230,7 @@ impl SelectContact {
         let content = Content::new(Offset::Start, vec![Box::new(searchbar)]);
         let back = IconButton::navigation(ctx, "left", |ctx: &mut Context| ctx.trigger_event(NavigateEvent(0)));
         let header = Header::stack(ctx, Some(back), "Send to contact", None);
-        SelectContact(Stack::default(), Page::new(header, content, None))
+        SelectContact(Stack::default(), Page::new(Some(header), content, None))
     }
 }
 
@@ -296,7 +296,7 @@ impl Amount {
         let back = IconButton::navigation(ctx, "left", |ctx: &mut Context| ctx.trigger_event(NavigateEvent(0)));
         let header = Header::stack(ctx, Some(back), "Bitcoin amount", None);
 
-        Amount(Stack::default(), Page::new(header, content, Some(bumper)), ButtonState::Default, address)
+        Amount(Stack::default(), Page::new(Some(header), content, Some(bumper)), ButtonState::Default, address)
     }
 }
 
@@ -354,7 +354,7 @@ impl Speed {
         let back = IconButton::navigation(ctx, "left", |ctx: &mut Context| ctx.trigger_event(NavigateEvent(0)));
 
         let header = Header::stack(ctx, Some(back), "Transaction speed", None);
-        Speed(Stack::default(), Page::new(header, content, Some(bumper)))
+        Speed(Stack::default(), Page::new(Some(header), content, Some(bumper)))
     }
 }
 
@@ -424,7 +424,7 @@ impl Confirm {
         let content = Content::new(Offset::Start, vec![Box::new(confirm_address), Box::new(confirm_amount)]);
         let back = IconButton::navigation(ctx, "left", |ctx: &mut Context| ctx.trigger_event(NavigateEvent(0)));
         let header = Header::stack(ctx, Some(back), "Confirm send", None);
-        Confirm(Stack::default(), Page::new(header, content, Some(bumper)))
+        Confirm(Stack::default(), Page::new(Some(header), content, Some(bumper)))
     }
 }
 
@@ -456,7 +456,7 @@ impl Success {
         let bumper = Bumper::single_button(ctx, button);
         let close = IconButton::close(ctx, |ctx: &mut Context| ctx.trigger_event(NavigateEvent(0)));
         let header = Header::stack(ctx, Some(close), "Send confirmed", None);
-        Success(Stack::default(), Page::new(header, content, Some(bumper)))
+        Success(Stack::default(), Page::new(Some(header), content, Some(bumper)))
     }
 }
 
@@ -488,7 +488,7 @@ impl Receive {
         let bumper = Bumper::single_button(ctx, button);
         let close = IconButton::navigation(ctx, "left", |ctx: &mut Context| ctx.trigger_event(NavigateEvent(0)));
         let header = Header::stack(ctx, Some(close), "Receive Bitcoin", None);
-        Receive(Stack::default(), Page::new(header, content, Some(bumper)))
+        Receive(Stack::default(), Page::new(Some(header), content, Some(bumper)))
     }
 }
 
