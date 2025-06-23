@@ -38,7 +38,7 @@ impl Service for PriceService {
     }
 
     fn callback(state: &mut State, response: f64) {
-        state.set(&Price(response));
+        state.set(Price(response));
     }
 }
 impl Services for PriceService {}

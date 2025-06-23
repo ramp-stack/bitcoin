@@ -13,16 +13,16 @@ impl BDKPlugin {
         self.0.send::<BDKService>(&request)
     }
 
-    pub fn balance(ctx: &mut Context) -> f64 {
+    pub fn balance(_ctx: &mut Context) -> f64 {
         0.0
     }
 
     pub fn price(ctx: &mut Context) -> f64 {
-        ctx.state().get::<Price>().0
+        ctx.state().get_or_default::<Price>().clone().0
     }
 
     pub fn address(ctx: &mut Context) -> String {
-        let address = ctx.state().get::<Address>().0;
+        let address = ctx.state().get_or_default::<Address>().clone().0;
         ctx.runtime.send::<BDKService>(&Request::GetNewAddress);
         address
     }

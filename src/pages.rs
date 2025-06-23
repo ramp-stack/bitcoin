@@ -28,8 +28,8 @@ use pelican_ui_std::{
     NavigateEvent
 };
 
-use crate::service::Address as BitcoinAddress;
-use crate::service::{Request, BDKService};
+// use crate::service::Address as BitcoinAddress;
+// use crate::service::{Request, BDKService};
 use crate::plugin::BDKPlugin;
 
 // use crate::bdk::{BDKPlugin, SendAddress, SendAmount, SendFee, CurrentTransaction};

@@ -88,7 +88,7 @@ impl Service for BDKService {
 
     fn callback(state: &mut State, response: Self::Send) {
         match response {
-            Response::NewAddress(address) => state.set(&Address(address)),
+            Response::NewAddress(address) => state.set(Address(address)),
         }
     }
 }
