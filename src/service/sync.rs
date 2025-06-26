@@ -24,7 +24,7 @@ impl BackgroundTask for BDKSync {
         BDKSync(Wallet::new(&mut ctx.cache).await.unwrap())
     }
 
-    async fn run(&mut self, ctx: &mut hardware::Context) -> Result<Option<Duration>, Error> {
+    async fn run(&mut self, ctx: &mut hardware::Context) -> Result<Option<Duration>, Error> {        
         self.0.scan().await?;
 
         let transactions = self.0.transactions(&mut ctx.cache).await?;

@@ -10,3 +10,5 @@ pub mod qr_code;
 pub use qr_code::*;
 pub mod qr_scanner;
 pub use qr_scanner::*;
+pub mod button;
+pub use button::*;

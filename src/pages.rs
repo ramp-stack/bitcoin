@@ -3,6 +3,9 @@ use pelican_ui::drawable::{Drawable, Component, Align};
 use pelican_ui::layout::{Area, SizeRequest, Layout};
 use pelican_ui::{Context, Component};
 
+use std::time::Duration;
+use std::sync::LazyLock;
+
 use crate::{
     components::AmountDisplay,
     components::AmountInput,
@@ -25,16 +28,10 @@ use pelican_ui_std::{
     Bumper, TextInput,
     SetActiveInput, IS_MOBILE,
     QuickActions, ListItemSelector,
-    NavigateEvent
+    NavigateEvent, Alert, InternetConnection
 };
 
-// use crate::service::Address as BitcoinAddress;
-// use crate::service::{Request, BDKService};
 use crate::plugin::BDKPlugin;
-
-// use crate::bdk::{BDKPlugin, SendAddress, SendAmount, SendFee, CurrentTransaction};
-// use crate::bdk::parse_btc_uri;
-// use crate::MSGPlugin;
 
 #[derive(Debug, Component)]
 pub struct BitcoinHome(Stack, Page);
@@ -104,11 +101,16 @@ impl OnEvent for BitcoinHome {
         if let Some(TickEvent) = event.downcast_ref::<TickEvent>() {
             let (btc, price) = (BDKPlugin::balance(ctx), BDKPlugin::price(ctx));
             println!("{:?} {:?}", btc, price);
-            let items = &mut *self.1.content().items();
-            let display: &mut AmountDisplay = items[0].as_any_mut().downcast_mut::<AmountDisplay>().unwrap();
+            let display = &mut *self.1.content().find::<AmountDisplay>().unwrap();
             *display.usd() = format_usd(btc*price).to_string();
             *display.btc() = format_nano_btc(btc*NANS).to_string();
             self.update_transactions(ctx);
+
+            // if !ctx.state().get::<InternetConnection>().map(|t| t.0).unwrap_or(false) {
+            //     if self.1.content().find::<Alert>().is_none() {
+            //         self.1.content().items().push(Box::new(Alert::new(ctx, "No internet connection found.")))
+            //     }
+            // } 
         }
         true
     }
