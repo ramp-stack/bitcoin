@@ -1,5 +1,4 @@
 use pelican_ui::runtime::{Service, Services, ThreadContext, async_trait, Error, ServiceList, BackgroundList};
-use pelican_ui_std::InternetConnection;
 use pelican_ui::hardware::{self};
 use pelican_ui::State;
 

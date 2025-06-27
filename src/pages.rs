@@ -3,9 +3,6 @@ use pelican_ui::drawable::{Drawable, Component, Align};
 use pelican_ui::layout::{Area, SizeRequest, Layout};
 use pelican_ui::{Context, Component};
 
-use std::time::Duration;
-use std::sync::LazyLock;
-
 use crate::{
     components::AmountDisplay,
     components::AmountInput,
@@ -28,7 +25,7 @@ use pelican_ui_std::{
     Bumper, TextInput,
     SetActiveInput, IS_MOBILE,
     QuickActions, ListItemSelector,
-    NavigateEvent, Alert, InternetConnection
+    NavigateEvent, // Alert, InternetConnection
 };
 
 use crate::plugin::BDKPlugin;

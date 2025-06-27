@@ -1,11 +1,13 @@
 use pelican_ui::Context;
-use pelican_ui::air::OrangeName;
 use pelican_ui_std::AppPage;
 use crate::pages::BitcoinHome;
 
+type BitcoinButton = (&'static str, Box<dyn FnMut(&mut Context) -> Box<dyn AppPage>>);
+
 pub struct IconButtonBitcoin;
 impl IconButtonBitcoin {
-    pub fn new(ctx: &mut Context) -> (&'static str, Box<dyn FnMut(&mut Context) -> Box<dyn AppPage>>) {
+    #[allow(clippy::new_ret_no_self)]
+    pub fn new(_ctx: &mut Context) -> BitcoinButton {
         // let label = if is_blocked { "unblock" } else { "block" };
         let closure = Box::new(move |ctx: &mut Context| {
             // let application_page = match is_blocked { 
