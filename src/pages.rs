@@ -50,6 +50,7 @@ impl BitcoinHome {
         let receive = Button::primary(ctx, "Receive", |ctx: &mut Context| ctx.trigger_event(NavigateEvent(1)));
         let header = Header::home(ctx, "Wallet");
         let bumper = Bumper::double_button(ctx, receive, send);
+        let background = ctx.theme.colors.brand.primary;
         let content = Content::new(Offset::Center, vec![Box::new(AmountDisplay::new(ctx, "$0.00", "0 nb")) as Box<dyn Drawable>]);
         BitcoinHome(Stack::center(), Page::new(Some(header), content, Some(bumper)))
     }
@@ -97,7 +98,7 @@ impl OnEvent for BitcoinHome {
     fn on_event(&mut self, ctx: &mut Context, event: &mut dyn Event) -> bool {
         if let Some(TickEvent) = event.downcast_ref::<TickEvent>() {
             let (btc, price) = (BDKPlugin::balance(ctx), BDKPlugin::price(ctx));
-            println!("{:?} {:?}", btc, price);
+            // println!("{:?} {:?}", btc, price); 
             let display = &mut *self.1.content().find::<AmountDisplay>().unwrap();
             *display.usd() = format_usd(btc*price).to_string();
             *display.btc() = format_nano_btc(btc*NANS).to_string();
@@ -133,7 +134,7 @@ impl Address {
     fn new(ctx: &mut Context, address: Option<String>) -> Self {
         let button = Button::disabled(ctx, "Continue", |ctx: &mut Context| ctx.trigger_event(NavigateEvent(1)));
         let icon_button = None::<(&'static str, fn(&mut Context, &mut String))>;
-        let address_input = TextInput::new(ctx, None, None, "Bitcoin address...", None, icon_button);
+        let address_input = TextInput::new(ctx, None, None, "Bitcoin address...", None, icon_button, false);
 
         let paste = Button::secondary(ctx, Some("paste"), "Paste Clipboard", None, move |ctx: &mut Context| {
             let data = ctx.hardware.paste();
@@ -225,7 +226,7 @@ impl AppPage for SelectContact {
 impl SelectContact {
     fn new(ctx: &mut Context) -> Self {
         let icon_button = None::<(&'static str, fn(&mut Context, &mut String))>;
-        let searchbar = TextInput::new(ctx, None, None, "Profile name...", None, icon_button); // make this actually search
+        let searchbar = TextInput::new(ctx, None, None, "Profile name...", None, icon_button, false); // make this actually search
         let content = Content::new(Offset::Start, vec![Box::new(searchbar)]);
         let back = IconButton::navigation(ctx, "left", |ctx: &mut Context| ctx.trigger_event(NavigateEvent(0)));
         let header = Header::stack(ctx, Some(back), "Send to contact", None);
