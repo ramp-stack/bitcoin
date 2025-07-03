@@ -50,7 +50,6 @@ impl BitcoinHome {
         let receive = Button::primary(ctx, "Receive", |ctx: &mut Context| ctx.trigger_event(NavigateEvent(1)));
         let header = Header::home(ctx, "Wallet");
         let bumper = Bumper::double_button(ctx, receive, send);
-        let background = ctx.theme.colors.brand.primary;
         let content = Content::new(Offset::Center, vec![Box::new(AmountDisplay::new(ctx, "$0.00", "0 nb")) as Box<dyn Drawable>]);
         BitcoinHome(Stack::center(), Page::new(Some(header), content, Some(bumper)))
     }
@@ -359,18 +358,18 @@ impl Speed {
 }
 
 impl OnEvent for Speed {
-    fn on_event(&mut self, _ctx: &mut Context, event: &mut dyn Event) -> bool {
-        if let Some(TickEvent) = event.downcast_ref::<TickEvent>() {
-            // let selector = self.1.content().find::<ListItemSelector>().unwrap();
-            // let current = ctx.state().get::<SendFee>();
-            // match selector.index() {
-            //     Some(0) => ctx.state().set(&SendFee::new(*current.standard_fee(), *current.priority_fee(), false)),
-            //     Some(1) => ctx.state().set(&SendFee::new(*current.standard_fee(), *current.priority_fee(), true)),
-            //     _ => {}
-            // }
-        }
-        true
-    }
+    // fn on_event(&mut self, _ctx: &mut Context, event: &mut dyn Event) -> bool {
+    //     if let Some(TickEvent) = event.downcast_ref::<TickEvent>() {
+    //         let selector = self.1.content().find::<ListItemSelector>().unwrap();
+    //         let current = ctx.state().get::<SendFee>();
+    //         match selector.index() {
+    //             Some(0) => ctx.state().set(&SendFee::new(*current.standard_fee(), *current.priority_fee(), false)),
+    //             Some(1) => ctx.state().set(&SendFee::new(*current.standard_fee(), *current.priority_fee(), true)),
+    //             _ => {}
+    //         }
+    //     }
+    //     true
+    // }
 }
 
 #[derive(Debug, Component)]
