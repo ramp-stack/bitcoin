@@ -12,7 +12,7 @@ pub struct DataItemBitcoin;
 
 impl DataItemBitcoin {
     pub fn confirm_address(ctx: &mut Context, address: &str, to_edit_address: impl FnMut(&mut Context) + 'static) -> DataItem {
-        let edit_address = Button::secondary(ctx, Some("edit"), "Edit Address", None, to_edit_address);
+        let edit_address = Button::secondary(ctx, Some("edit"), "Edit Address", None, to_edit_address, None);
 
         DataItem::new(ctx, None, "Confirm address", Some(address),
             Some("Bitcoin sent to the wrong address can never be recovered."),
@@ -42,8 +42,8 @@ impl DataItemBitcoin {
             ("Total", total)
         ];
 
-        let edit_speed = Button::secondary(ctx, Some("edit"), "Edit Speed", None, to_edit_speed);
-        let edit_amount = Button::secondary(ctx, Some("edit"), "Edit Amount", None, to_edit_amount);
+        let edit_speed = Button::secondary(ctx, Some("edit"), "Edit Speed", None, to_edit_speed, None);
+        let edit_amount = Button::secondary(ctx, Some("edit"), "Edit Amount", None, to_edit_amount, None);
         DataItem::new(ctx, None, "Confirm amount", None, None, Some(details), Some(vec![edit_amount, edit_speed]))
     }
 
