@@ -8,9 +8,8 @@ use crate::{
     components::AmountInput,
     components::NumericKeypad,
     components::DataItemBitcoin,
-    components::QRCodeScanner,
-    components::QRCode,
-    events::QRCodeScannedEvent,
+    components::ListItemBitcoin,
+    events::UpdateWalletEvent,
     format_usd,
     format_nano_btc,
     NANS
@@ -26,6 +25,8 @@ use pelican_ui_std::{
     SetActiveInput, IS_MOBILE,
     QuickActions, ListItemSelector,
     NavigateEvent, // Alert, InternetConnection
+    ListItem, ListItemGroup, QRCode, 
+    QRCodeScanner, QRCodeScannedEvent
 };
 
 use crate::plugin::BDKPlugin;
@@ -37,60 +38,34 @@ impl AppPage for BitcoinHome {
     fn has_nav(&self) -> bool { true }
     fn navigate(self: Box<Self>, ctx: &mut Context, index: usize) -> Result<Box<dyn AppPage>, Box<dyn AppPage>> { 
         match index {
-            0 => Ok(Box::new(Address::new(ctx, None))),
-            1 => Ok(Box::new(Receive::new(ctx))),
+            0 => Ok(Box::new(Wallet::new(ctx))),
+            1 => Ok(Box::new(AddWallet::new(ctx))),
             _ => Err(self),
         }
     }
 }
 
+pub struct TestWallet(bool, f64, f64, String); 
+
 impl BitcoinHome {
     pub fn new(ctx: &mut Context) -> Self {
-        let send = Button::primary(ctx, "Send", |ctx: &mut Context| ctx.trigger_event(NavigateEvent(0)));
-        let receive = Button::primary(ctx, "Receive", |ctx: &mut Context| ctx.trigger_event(NavigateEvent(1)));
-        let header = Header::home(ctx, "Wallet");
-        let bumper = Bumper::double_button(ctx, receive, send);
+        let add = IconButton::navigation(ctx, "add", |ctx: &mut Context| ctx.trigger_event(NavigateEvent(1)));
+
+        let header = Header::stack(ctx, None, "Wallets", Some(add));
         let background = ctx.theme.colors.brand.primary;
-        let content = Content::new(Offset::Center, vec![Box::new(AmountDisplay::new(ctx, "$0.00", "0 nb")) as Box<dyn Drawable>]);
-        BitcoinHome(Stack::center(), Page::new(Some(header), content, Some(bumper)))
-    }
 
-    fn update_transactions(&mut self, _ctx: &mut Context) {
-        // let bdk = ctx.get::<BDKPlugin>();
-        // let transactions = bdk.get_transactions();
-        // let content = &mut self.1.content();
+        // amount displays wallets sum
+        let wallets = vec![TestWallet(true, 0.0001234, 100000.0, "Ella's Wallet".to_string())];
 
-        // if !transactions.is_empty() {
-        //     *content.offset() = Offset::Start;
-        //     let transactions = transactions.into_iter().map(|t| {
-        //         let txid = t.txid;
-        //         match t.datetime {
-        //             Some(stamp) => ListItem::bitcoin(
-        //                 ctx, t.is_received, t.amount.to_btc(), t.price, Timestamp::new(stamp),
-        //                 move |ctx: &mut Context| {
-        //                     // let tx = ctx.get::<BDKPlugin>().find_transaction(txid).unwrap();
-        //                     // ctx.state().set(&CurrentTransaction::new(tx));
-        //                     // ViewTransaction::navigate(ctx);
-        //                 }
-        //             ),
-        //             None => ListItem::bitcoin_sending(
-        //                 ctx, t.amount.to_btc(), t.price, 
-        //                 move |ctx: &mut Context| {
-        //                     // let tx = ctx.get::<BDKPlugin>().find_transaction(txid).unwrap();
-        //                     // ctx.state().set(&CurrentTransaction::new(tx));
-        //                     // ViewTransaction::navigate(ctx)
-        //                 }
-        //             )
-        //         }
-        //     }).collect();
+        let wallets = wallets.into_iter().map(|wallet| {
+            // spending/savings, bitcoin amt, price, wallet name
+            ListItemBitcoin::wallet(ctx, wallet.0, wallet.1, wallet.2, wallet.3)
+        }).collect::<Vec<ListItem>>();
+        let wallet_group = ListItemGroup::new(wallets);
 
-        //     let items = &mut content.items();
-        //     let new_group = ListItemGroup::new(transactions);
-        //     match items.get_mut(1).and_then(|item| item.as_any_mut().downcast_mut::<ListItemGroup>()) {
-        //         Some(existing_group) => *existing_group = new_group,
-        //         None => items.push(Box::new(new_group)),
-        //     }
-        // }
+        let amount = AmountDisplay::new(ctx, "$0.00", "0 nb");
+        let content = Content::new(Offset::Start, vec![Box::new(amount), Box::new(wallet_group)]);
+        BitcoinHome(Stack::center(), Page::new(Some(header), content, None))
     }
 }
 
@@ -102,13 +77,6 @@ impl OnEvent for BitcoinHome {
             let display = &mut *self.1.content().find::<AmountDisplay>().unwrap();
             *display.usd() = format_usd(btc*price).to_string();
             *display.btc() = format_nano_btc(btc*NANS).to_string();
-            self.update_transactions(ctx);
-
-            // if !ctx.state().get::<InternetConnection>().map(|t| t.0).unwrap_or(false) {
-            //     if self.1.content().find::<Alert>().is_none() {
-            //         self.1.content().items().push(Box::new(Alert::new(ctx, "No internet connection found.")))
-            //     }
-            // } 
         }
         true
     }
@@ -132,7 +100,6 @@ impl AppPage for Address {
 
 impl Address {
     fn new(ctx: &mut Context, address: Option<String>) -> Self {
-        let button = Button::disabled(ctx, "Continue", |ctx: &mut Context| ctx.trigger_event(NavigateEvent(1)));
         let icon_button = None::<(&'static str, fn(&mut Context, &mut String))>;
         let address_input = TextInput::new(ctx, None, None, "Bitcoin address...", None, icon_button, false);
 
@@ -148,7 +115,10 @@ impl Address {
         let back = IconButton::navigation(ctx, "left", |ctx: &mut Context| ctx.trigger_event(NavigateEvent(0)));
 
         let header = Header::stack(ctx, Some(back), "Send bitcoin", None);
+        
+        let button = Button::disabled(ctx, "Continue", |ctx: &mut Context| ctx.trigger_event(NavigateEvent(1)));
         let bumper = Bumper::single_button(ctx, button);
+
         let content = Content::new(Offset::Start, vec![Box::new(address_input), Box::new(quick_actions)]);
 
         Address(Stack::default(), Page::new(Some(header), content, Some(bumper)), ButtonState::Default, address)
@@ -527,3 +497,243 @@ impl Receive {
 //         ViewTransaction(Stack::default(), Page::new(header, content, Some(bumper)), false)
 //     }
 // }
+
+
+#[derive(Debug, Component)]
+pub struct Wallet(Stack, Page);
+
+impl AppPage for Wallet {
+    fn has_nav(&self) -> bool { true }
+    fn navigate(self: Box<Self>, ctx: &mut Context, index: usize) -> Result<Box<dyn AppPage>, Box<dyn AppPage>> { 
+        match index {
+            0 => Ok(Box::new(Address::new(ctx, None))),
+            1 => Ok(Box::new(Receive::new(ctx))),
+            2 => Ok(Box::new(BitcoinHome::new(ctx))),
+            3 => Ok(Box::new(WalletSettings::new(ctx))),
+            _ => Err(self),
+        }
+    }
+}
+
+impl Wallet {
+    pub fn new(ctx: &mut Context) -> Self {
+        let send = Button::primary(ctx, "Send", |ctx: &mut Context| ctx.trigger_event(NavigateEvent(0)));
+        let receive = Button::primary(ctx, "Receive", |ctx: &mut Context| ctx.trigger_event(NavigateEvent(1)));
+
+        let back = IconButton::navigation(ctx, "left", |ctx: &mut Context| ctx.trigger_event(NavigateEvent(2)));
+        let info = IconButton::navigation(ctx, "info", |ctx: &mut Context| ctx.trigger_event(NavigateEvent(3)));
+
+        // wallet name updates to saved name
+        let header = Header::stack(ctx, Some(back), "Wallet", Some(info));
+        let bumper = Bumper::double_button(ctx, receive, send);
+        let background = ctx.theme.colors.brand.primary;
+        let content = Content::new(Offset::Center, vec![Box::new(AmountDisplay::new(ctx, "$0.00", "0 nb")) as Box<dyn Drawable>]);
+        Wallet(Stack::center(), Page::new(Some(header), content, Some(bumper)))
+    }
+
+    fn update_transactions(&mut self, _ctx: &mut Context) {
+        // let bdk = ctx.get::<BDKPlugin>();
+        // let transactions = bdk.get_transactions();
+        // let content = &mut self.1.content();
+
+        // if !transactions.is_empty() {
+        //     *content.offset() = Offset::Start;
+        //     let transactions = transactions.into_iter().map(|t| {
+        //         let txid = t.txid;
+        //         match t.datetime {
+        //             Some(stamp) => ListItem::bitcoin(
+        //                 ctx, t.is_received, t.amount.to_btc(), t.price, Timestamp::new(stamp),
+        //                 move |ctx: &mut Context| {
+        //                     // let tx = ctx.get::<BDKPlugin>().find_transaction(txid).unwrap();
+        //                     // ctx.state().set(&CurrentTransaction::new(tx));
+        //                     // ViewTransaction::navigate(ctx);
+        //                 }
+        //             ),
+        //             None => ListItem::bitcoin_sending(
+        //                 ctx, t.amount.to_btc(), t.price, 
+        //                 move |ctx: &mut Context| {
+        //                     // let tx = ctx.get::<BDKPlugin>().find_transaction(txid).unwrap();
+        //                     // ctx.state().set(&CurrentTransaction::new(tx));
+        //                     // ViewTransaction::navigate(ctx)
+        //                 }
+        //             )
+        //         }
+        //     }).collect();
+
+        //     let items = &mut content.items();
+        //     let new_group = ListItemGroup::new(transactions);
+        //     match items.get_mut(1).and_then(|item| item.as_any_mut().downcast_mut::<ListItemGroup>()) {
+        //         Some(existing_group) => *existing_group = new_group,
+        //         None => items.push(Box::new(new_group)),
+        //     }
+        // }
+    }
+}
+
+impl OnEvent for Wallet {
+    fn on_event(&mut self, ctx: &mut Context, event: &mut dyn Event) -> bool {
+        if let Some(TickEvent) = event.downcast_ref::<TickEvent>() {
+            let (btc, price) = (BDKPlugin::balance(ctx), BDKPlugin::price(ctx));
+            // println!("{:?} {:?}", btc, price); 
+            let display = &mut *self.1.content().find::<AmountDisplay>().unwrap();
+            *display.usd() = format_usd(btc*price).to_string();
+            *display.btc() = format_nano_btc(btc*NANS).to_string();
+            self.update_transactions(ctx);
+
+            // if !ctx.state().get::<InternetConnection>().map(|t| t.0).unwrap_or(false) {
+            //     if self.1.content().find::<Alert>().is_none() {
+            //         self.1.content().items().push(Box::new(Alert::new(ctx, "No internet connection found.")))
+            //     }
+            // } 
+        }
+        true
+    }
+}
+
+
+#[derive(Debug, Component)]
+pub struct WalletSettings(Stack, Page, #[skip] ButtonState, #[skip] String);
+
+impl AppPage for WalletSettings {
+    fn has_nav(&self) -> bool { false }
+    fn navigate(self: Box<Self>, ctx: &mut Context, index: usize) -> Result<Box<dyn AppPage>, Box<dyn AppPage>> { 
+        match index {
+            0 => Ok(Box::new(Wallet::new(ctx))),
+            _ => Err(self)
+        }
+    }
+}
+
+impl WalletSettings {
+    fn new(ctx: &mut Context) -> Self {
+        let save = Button::disabled(ctx, "Save", move |ctx: &mut Context| ctx.trigger_event(UpdateWalletEvent));
+
+        let icon_button = None::<(&'static str, fn(&mut Context, &mut String))>;
+        let name_input = TextInput::new(ctx, None, Some("Wallet name"), "Wallet name...", None, icon_button, false);
+
+        let back = IconButton::navigation(ctx, "left", |ctx: &mut Context| ctx.trigger_event(NavigateEvent(0)));
+
+        let header = Header::stack(ctx, Some(back), "Settings", None);
+        let bumper = Bumper::single_button(ctx, save);
+        let content = Content::new(Offset::Start, vec![Box::new(name_input) as Box<dyn Drawable>]);
+
+        WalletSettings(Stack::default(), Page::new(Some(header), content, Some(bumper)), ButtonState::Default, String::new())
+    }
+}
+
+impl OnEvent for WalletSettings {
+    fn on_event(&mut self, ctx: &mut Context, event: &mut dyn Event) -> bool {
+        if let Some(TickEvent) = event.downcast_ref::<TickEvent>() {
+            let name_input = &mut self.1.content().find::<TextInput>().unwrap();
+            let name_changed = name_input.value().to_string() != self.3;
+
+            let button = self.1.bumper().as_mut().unwrap().find::<Button>().unwrap();
+            button.update_state(ctx, !name_changed, name_changed, &mut self.2);
+        } else if let Some(UpdateWalletEvent) = event.downcast_ref::<UpdateWalletEvent>() {
+            let name_input = &mut self.1.content().find::<TextInput>().unwrap();
+            self.3 = name_input.value().to_string();
+        }
+
+        true
+    }
+}
+
+
+#[derive(Debug, Component)]
+pub struct AddWallet(Stack, Page);
+impl OnEvent for AddWallet {}
+
+impl AppPage for AddWallet {
+    fn has_nav(&self) -> bool { false }
+    fn navigate(self: Box<Self>, ctx: &mut Context, index: usize) -> Result<Box<dyn AppPage>, Box<dyn AppPage>> {
+        match index {
+            0 => Ok(Box::new(Wallet::new(ctx))),
+            1 => Ok(Box::new(NewSpending::new(ctx))),
+            _ => Err(self)
+        }
+    }
+}
+
+impl AddWallet {
+    fn new(ctx: &mut Context) -> Self {
+        let wallet_selector = ListItemSelector::new(ctx,
+            ("Spending Wallet", "Create a bitcoin wallet stored on your phone for easy use", None),
+            ("Savings Wallet", "Create a bitcoin wallet that is safe even if your phone gets hacked", None),
+            None, None
+        );
+
+        let button = Button::primary(ctx, "Continue", |ctx: &mut Context| ctx.trigger_event(NavigateEvent(1)));
+
+        let bumper = Bumper::single_button(ctx, button);
+        let content = Content::new(Offset::Start, vec![Box::new(wallet_selector)]);
+        let back = IconButton::navigation(ctx, "left", |ctx: &mut Context| ctx.trigger_event(NavigateEvent(0)));
+
+        let header = Header::stack(ctx, Some(back), "Add wallet", None);
+        AddWallet(Stack::default(), Page::new(Some(header), content, Some(bumper)))
+    }
+}
+
+
+#[derive(Debug, Component)]
+pub struct NewSpending(Stack, Page, #[skip] ButtonState, #[skip] String);
+impl OnEvent for NewSpending {}
+
+impl AppPage for NewSpending {
+    fn has_nav(&self) -> bool { false }
+    fn navigate(self: Box<Self>, ctx: &mut Context, index: usize) -> Result<Box<dyn AppPage>, Box<dyn AppPage>> {
+        match index {
+            0 => Ok(Box::new(AddWallet::new(ctx))),
+            1 => Ok(Box::new(WalletCreated::new(ctx))),
+            _ => Err(self)
+        }
+    }
+}
+
+impl NewSpending {
+    fn new(ctx: &mut Context) -> Self {
+        let save = Button::primary(ctx, "Continue", move |ctx: &mut Context| ctx.trigger_event(NavigateEvent(1)));
+
+        let icon_button = None::<(&'static str, fn(&mut Context, &mut String))>;
+        let name_input = TextInput::new(ctx, Some("Wallet 2"), Some("Wallet name"), "Wallet name...", None, icon_button, false);
+
+        let back = IconButton::navigation(ctx, "left", |ctx: &mut Context| ctx.trigger_event(NavigateEvent(0)));
+
+        let header = Header::stack(ctx, Some(back), "New spending wallet", None);
+        let bumper = Bumper::single_button(ctx, save);
+        let content = Content::new(Offset::Start, vec![Box::new(name_input) as Box<dyn Drawable>]);
+
+        NewSpending(Stack::default(), Page::new(Some(header), content, Some(bumper)), ButtonState::Default, String::new())
+    }
+}
+
+#[derive(Debug, Component)]
+pub struct WalletCreated(Stack, Page);
+impl OnEvent for WalletCreated {}
+
+impl AppPage for WalletCreated {
+    fn has_nav(&self) -> bool { false }
+    fn navigate(self: Box<Self>, ctx: &mut Context, index: usize) -> Result<Box<dyn AppPage>, Box<dyn AppPage>> {
+        match index {
+            0 => Ok(Box::new(Wallet::new(ctx))),
+            _ => Err(self)
+        }
+    }
+}
+
+impl WalletCreated {
+    fn new(ctx: &mut Context) -> Self {
+        let theme = &ctx.theme;
+        let (color, text_size) = (theme.colors.text.heading, theme.fonts.size.h4);
+
+        let text = "Wallet 2 successfully created";
+        let splash = Icon::new(ctx, "wallet", color, 96.0);
+
+        let text = Text::new(ctx, text, TextStyle::Heading, text_size, Align::Left);
+        let content = Content::new(Offset::Center, vec![Box::new(splash), Box::new(text)]);
+        let button = Button::close(ctx, "Done", |ctx: &mut Context| ctx.trigger_event(NavigateEvent(0)));
+        let bumper = Bumper::single_button(ctx, button);
+        let close = IconButton::close(ctx, |ctx: &mut Context| ctx.trigger_event(NavigateEvent(0)));
+        let header = Header::stack(ctx, Some(close), "Wallet Created", None);
+        WalletCreated(Stack::default(), Page::new(Some(header), content, Some(bumper)))
+    }
+}
