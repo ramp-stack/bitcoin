@@ -16,7 +16,8 @@ use crate::{
 };
 
 use pelican_ui_std::{
-    AppPage, Stack, Page,
+    QRCodeScanner, QRCodeScannedEvent,
+    QRCode, AppPage, Stack, Page,
     Header, IconButton,
     Avatar, Icon, Text,
     TextStyle, Content,
@@ -757,6 +758,7 @@ impl NameWallet {
         let (color, text_size) = (theme.colors.text.heading, theme.fonts.size.h4);
 
         let text = "Wallet name";
+        let splash = Icon::new(ctx, "wallet", color, 96.0);
 
         let text = Text::new(ctx, text, TextStyle::Heading, text_size, Align::Left);
         let content = Content::new(Offset::Center, vec![Box::new(splash), Box::new(text)]);
