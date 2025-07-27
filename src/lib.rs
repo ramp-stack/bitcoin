@@ -33,14 +33,15 @@ pub fn format_usd(t: f64) -> String {
 
     let dollar_str = dollars.to_string();
     let mut chars = dollar_str.chars().rev().collect::<Vec<_>>();
-    for i in (3..chars.len()).step_by(3) {
+
+    for i in (3..chars.len()).step_by(3).rev() {
         chars.insert(i, ',');
     }
+
     let formatted_dollars = chars.into_iter().rev().collect::<String>();
 
     format!("${}.{:02}", formatted_dollars, cents)
 }
-
 
 pub fn format_nano_btc(nb: f64) -> String {
     let rounded = nb.round() as u64;
@@ -53,6 +54,9 @@ pub fn format_nano_btc(nb: f64) -> String {
 
 
 pub fn format_address(a: String) -> String {
-    format!("{}...{}", &a[..7], &a[a.len().saturating_sub(3)..])
+    match a.len() > 7 {
+        true => format!("{}...{}", &a[..7], &a[a.len().saturating_sub(3)..]),
+        false => a
+    }
 }
 

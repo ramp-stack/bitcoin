@@ -48,9 +48,9 @@ impl BitcoinHome {
     pub fn new(ctx: &mut Context) -> Self {
         let send = Button::primary(ctx, "Send", |ctx: &mut Context| ctx.trigger_event(NavigateEvent(0)));
         let receive = Button::primary(ctx, "Receive", |ctx: &mut Context| ctx.trigger_event(NavigateEvent(1)));
-        let header = Header::home(ctx, "Wallet");
+        let header = Header::home(ctx, "Wallet", None);
         let bumper = Bumper::double_button(ctx, receive, send);
-        let content = Content::new(Offset::Center, vec![Box::new(AmountDisplay::new(ctx, "$0.00", "0 nb")) as Box<dyn Drawable>]);
+        let content = Content::new(Offset::Center, vec![Box::new(AmountDisplay::new(ctx, "$148.41", "124,100 nb")) as Box<dyn Drawable>]);
         BitcoinHome(Stack::center(), Page::new(Some(header), content, Some(bumper)))
     }
 
@@ -96,12 +96,12 @@ impl BitcoinHome {
 impl OnEvent for BitcoinHome {
     fn on_event(&mut self, ctx: &mut Context, event: &mut dyn Event) -> bool {
         if let Some(TickEvent) = event.downcast_ref::<TickEvent>() {
-            let (btc, price) = (BDKPlugin::balance(ctx), BDKPlugin::price(ctx));
-            // println!("{:?} {:?}", btc, price); 
-            let display = &mut *self.1.content().find::<AmountDisplay>().unwrap();
-            *display.usd() = format_usd(btc*price).to_string();
-            *display.btc() = format_nano_btc(btc*NANS).to_string();
-            self.update_transactions(ctx);
+            // let (btc, price) = (BDKPlugin::balance(ctx), BDKPlugin::price(ctx));
+            // // println!("{:?} {:?}", btc, price); 
+            // let display = &mut *self.1.content().find::<AmountDisplay>().unwrap();
+            // *display.usd() = format_usd(btc*price).to_string();
+            // *display.btc() = format_nano_btc(btc*NANS).to_string();
+            // self.update_transactions(ctx);
 
             // if !ctx.state().get::<InternetConnection>().map(|t| t.0).unwrap_or(false) {
             //     if self.1.content().find::<Alert>().is_none() {
@@ -256,7 +256,7 @@ impl Amount {
         let nano_btc = btc*NANS;
         let usd = 0.0; // btc*price as f64;
 
-        let mut amount_display = AmountInput::new(ctx, Some((usd, &format_nano_btc(nano_btc))));
+        let mut amount_display = AmountInput::new(ctx, Some((usd, &format_nano_btc(nano_btc))), true);
         *amount_display.price() = price;
         // let bdk = ctx.get::<BDKPlugin>();
         let balance = 0.0; // bdk.get_balance().to_btc() as f32;

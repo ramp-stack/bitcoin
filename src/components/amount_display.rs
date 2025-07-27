@@ -3,6 +3,8 @@ use pelican_ui::drawable::{Drawable, Component, Align, Span, Image};
 use pelican_ui::layout::{Area, SizeRequest, Layout};
 use pelican_ui::{Context, Component};
 
+use crate::{NANS, format_nano_btc, format_usd};
+
 use pelican_ui_std::{
     TextStyle,
     Text,
@@ -13,137 +15,118 @@ use pelican_ui_std::{
     Offset,
     Column,
     Stack,
-    Icon
+    Icon,
+    ExpandableText
 };
 
-/// A component displaying an amount in both USD and BTC formats.
-///
-/// The [`AmountDisplay`] component is used to show financial information, such as
-/// a currency amount in both USD and Bitcoin (BTC). It consists of a column layout
-/// containing a main text for the USD amount and a subtext for the BTC equivalent.
 #[derive(Debug, Component)]
 pub struct AmountDisplay(Column, Text, SubText);
 impl OnEvent for AmountDisplay {}
 
 impl AmountDisplay {
-    /// Creates a new [`AmountDisplay`] component.
-    ///
-    /// This function initializes the [`AmountDisplay`] with a column layout,
-    /// a text component showing the USD amount, and a subtext component displaying
-    /// the BTC equivalent.
-    ///
-    /// # Parameters
-    /// - `ctx`: A mutable reference to [`Context`].
-    ///
-    /// # Returns
-    /// A new [`AmountDisplay`] component with default values.
-    ///
-    /// # Example
-    /// ```rust
-    /// let amount_display = AmountDisplay::new(ctx);
-    /// ```
     pub fn new(ctx: &mut Context, text: &str, subtext: &str) -> Self {
-        let font_size = ctx.theme.fonts.size.title;
+        let font_size = ctx.theme.fonts.size;
+        let font_size = if text.len().saturating_sub(2) <= 5 { font_size.title } else { font_size.h1 };
 
         AmountDisplay (
             Column::new(16.0, Offset::Center, Size::Fit, Padding(16.0, 64.0, 16.0, 64.0)),
             Text::new(ctx, text, TextStyle::Heading, font_size, Align::Left),
-            SubText::new(ctx, subtext)
+            SubText::new(ctx, subtext, false)
         )
     }
 
-    /// Returns a mutable reference to the USD text in the [`AmountDisplay`].
     pub fn usd(&mut self) -> &mut String { &mut self.1.text().spans[0].text }
-
-    /// Returns a mutable reference to the BTC text in the [`AmountDisplay`].
     pub fn btc(&mut self) -> &mut String { &mut self.2.2.text().spans[0].text }
 }
 
 
 #[derive(Debug, Component)]
-struct SubText(Row, Option<Image>, Text, #[skip] bool);
+struct SubText(Row, Option<Image>, ExpandableText, #[skip] bool);
 impl OnEvent for SubText {}
 
 impl SubText {
-    fn new(ctx: &mut Context, btc: &str) -> Self {
-        let text_size = ctx.theme.fonts.size.lg;
-        SubText(Row::center(8.0), None, Text::new(ctx, btc, TextStyle::Secondary, text_size, Align::Left), true)
+    fn new(ctx: &mut Context, txt: &str, enabled: bool) -> Self {
+        let text_size = match txt.len() > 50 {
+            true => ctx.theme.fonts.size.md,
+            false => ctx.theme.fonts.size.lg,
+        };
+
+        SubText(Row::center(8.0), None, ExpandableText::new(ctx, txt, TextStyle::Secondary, text_size, Align::Center, None), enabled)
     }
 
     fn set_error(&mut self, ctx: &mut Context, err: &str) {
         let theme = &ctx.theme;
         let (color, text_size) = (theme.colors.status.danger, theme.fonts.size.lg);
         self.1 = Some(Icon::new(ctx, "error", color, 24.0));
-        self.2 = Text::new(ctx, err, TextStyle::Error, text_size, Align::Left);
+        self.2 = ExpandableText::new(ctx, err, TextStyle::Error, text_size, Align::Center, None);
     }
 
     fn set_subtext(&mut self, ctx: &mut Context, txt: &str) {
-        let text_size = ctx.theme.fonts.size.lg;
+        let text_size = match txt.len() > 50 {
+            true => ctx.theme.fonts.size.md,
+            false => ctx.theme.fonts.size.lg,
+        };
+
         self.1 = None;
-        self.2 = Text::new(ctx, txt, TextStyle::Secondary, text_size, Align::Left);
+        self.2 = ExpandableText::new(ctx, txt, TextStyle::Secondary, text_size, Align::Center, None);
     }
 
     fn error(&mut self) -> &mut bool {&mut self.3}
     fn _text(&mut self) -> &mut String {&mut self.2.text().spans[0].text}
 }
 
-/// A component for inputting an amount in USD and viewing BTC equivalent.
 #[derive(Debug, Component)]
 pub struct AmountInput(Stack, AmountInputContent);
 impl OnEvent for AmountInput {}
 
 impl AmountInput {
-    /// Creates a new `AmountInput` component. Optionally takes in a preset usd amount.
-    ///
-    /// # Example
-    /// ```
-    /// let mut amount_input = AmountInput::new(ctx, None);
-    /// ```
-    pub fn new(ctx: &mut Context, usd: Option<(f64, &str)> ) -> Self {
+    pub fn new(ctx: &mut Context, usd: Option<(f64, &str)>, show_eq: bool) -> Self {
         AmountInput (
             Stack(Offset::Center, Offset::Center, Size::Fit, Size::fill(), Padding::default()),
-            AmountInputContent::new(ctx, usd),
+            AmountInputContent::new(ctx, usd, show_eq),
         )
     }
 
     /// Returns the USD input value as a string.
     pub fn usd(&mut self) -> String { self.1.1.value() }
     /// Returns a mutable reference to the BTC input value.
-    pub fn btc(&mut self) -> &mut f32 { &mut self.1.4 }
+    pub fn btc(&mut self) -> &mut f64 { &mut self.1.4 }
     /// Returns the bitcoin price set for calculating btc equivalent.
-    pub fn price(&mut self) -> &mut f32 { &mut self.1.5 }
+    pub fn price(&mut self) -> &mut f64 { &mut self.1.5 }
     /// Returns a mutable reference to the error flag.
     pub fn error(&mut self) -> &mut bool { self.1.2.error() }
     /// Sets the minimum value for the amount input.
-    pub fn set_min(&mut self, a: f32) { self.1.3.0 = a; }
+    pub fn set_min(&mut self, a: f64) { self.1.3.0 = a as f32; }
     /// Sets the maximum value for the amount input.
-    pub fn set_max(&mut self, a: f32) { self.1.3.1 = a; }
+    pub fn set_max(&mut self, a: f64) { self.1.3.1 = a as f32; }
     /// Validates the input field against checks.
     pub fn validate(&mut self, ctx: &mut Context) { self.1.validate(ctx) }
 }
 
 #[derive(Debug, Component)]
-struct AmountInputContent(Column, Display, SubText, #[skip] (f32, f32), #[skip] f32, #[skip] f32);
-// layout, display, subtext, (min, max fee), btc_price, btc input
+struct AmountInputContent(Column, Display, SubText, #[skip] (f32, f32), #[skip] f64, #[skip] f64, #[skip] String, #[skip] bool);
+// layout, display, subtext, (min amount, max amount), btc, btc price, subtitle, switch subtitle to show nb equivalent of dollar
 impl AmountInputContent {
-    fn new(ctx: &mut Context, usd: Option<(f64, &str)>) -> Self { // usd, nans
-        let (num, sub) = usd.map(|(d, n)| {
-            if d == 0.0 {
-                ("0".to_string(), "Type dollar amount.".to_string())
-            } else {
-                let s = format!("{:.2}", d);
-                match &s[s.len() - 2..] == "00" {
-                    true => (s[..1].to_string(), n.to_string()),
-                    false => (s.to_string(), n.to_string()),
-                }
-            }
-        }).unwrap_or(("0".to_string(), "Type dollar amount.".to_string()));
+    fn new(ctx: &mut Context, usd: Option<(f64, &str)>, show_eq: bool) -> Self { // usd, nans
+        let (num, sub) = usd.map(|(d, n)| (d, n.to_string())).unwrap_or((0.0, "0 nb".to_string()));
+
+        const BITCOIN_PRICE: f64 = 118_000.00;
+        let enabled = num == 0.0;
+        let nbs = (num/BITCOIN_PRICE)*NANS;
+
+        let num = if !enabled {
+            let mut n = format_usd(num);
+            n.remove(0);
+            n
+        } else {
+            "0".to_string()
+        };
 
         AmountInputContent (
             Column::new(16.0, Offset::Center, Size::Fit, Padding(16.0, 64.0, 16.0, 64.0)),
             Display::new(ctx, &num),
-            SubText::new(ctx, &sub), 
-            (0.0, 0.0), 0.0, 0.0 // min amount, max amount, btc, btc price
+            SubText::new(ctx, &sub, enabled), 
+            (0.0, 0.0), nbs, BITCOIN_PRICE, sub.to_string(), show_eq 
         )
     }
 
@@ -156,7 +139,7 @@ impl AmountInputContent {
         println!("VAL: {:?}", value);
         match t_formatted.as_str() {
             "0" | "0." | "0.0" | "0.00" if !IS_MOBILE => {
-                self.2.set_subtext(ctx, "Type dollar amount."); // Prompt input
+                self.2.set_subtext(ctx, &self.6); // Prompt input
                 self.2.3 = true; // Disable buttons
             }
             _ if value < self.3.0 => {
@@ -171,9 +154,9 @@ impl AmountInputContent {
                 self.2.3 = true; // Disable buttons
             }
             _ => {
-                self.4 = value/self.5;
-                let amount = format!("{:.8} BTC", self.4); // value divided by bitcoin price.
-                self.2.set_subtext(ctx, &amount);
+                self.4 = (value as f64 / self.5) * NANS;
+                let amount = format_nano_btc(self.4); // value divided by bitcoin price.
+                if self.7 {self.2.set_subtext(ctx, &amount);}
                 self.2.3 = false; // Enable buttons
             }
         }
@@ -287,19 +270,25 @@ impl OnEvent for Display {}
 
 impl Display {
     pub fn new(ctx: &mut Context, num: &str) -> Self {
-        let theme = &ctx.theme;
-        let font_size = theme.fonts.size.title;
-        let (mc, dc) = (theme.colors.text.heading, theme.colors.text.secondary);
+        let font_sizes = ctx.theme.fonts.size;
+        let text_size = if num.len() <= 6 { font_sizes.title } else { font_sizes.h1 };
+
+        let color = ctx.theme.colors.text.heading;
+        let decimals = ctx.theme.colors.text.secondary;
 
         Display (
             Row::center(0.0),
-            Text::new(ctx, "$", TextStyle::Label(mc), font_size, Align::Left),
-            Text::new(ctx, num, TextStyle::Label(mc), font_size, Align::Left),
-            Text::new(ctx, "", TextStyle::Label(dc), font_size, Align::Left),
+            Text::new(ctx, "$", TextStyle::Label(color), text_size, Align::Left),
+            Text::new(ctx, num, TextStyle::Label(color), text_size, Align::Left),
+            Text::new(ctx, "", TextStyle::Label(decimals), text_size, Align::Left),
         )
     }
 
-    pub fn value(&mut self) -> String {self.amount().text.clone()+"."+&self.zeros().text}
+    pub fn value(&mut self) -> String {
+        // let zeros = self.zeros().text.clone();
+        // if zeros.is_empty() {return self.amount().text.clone();}
+        self.amount().text.clone()//+"."+&zeros
+    }
     pub fn amount(&mut self) -> &mut Span {&mut self.2.text().spans[0]}
     pub fn zeros(&mut self) -> &mut Span {&mut self.3.text().spans[0]}
     pub fn currency(&mut self) -> &mut Span {&mut self.1.text().spans[0]}

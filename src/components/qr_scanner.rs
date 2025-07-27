@@ -90,8 +90,8 @@ impl OnEvent for QRGuide {}
 
 impl QRGuide {
     pub fn new(ctx: &mut Context) -> Self {
-        let colors = ctx.theme.colors;
-        let (background, color) = (colors.background.secondary, colors.outline.secondary);
+        let background = ctx.theme.colors.background.secondary;
+        let color = ctx.theme.colors.outline.secondary;
         QRGuide(
             Stack(Offset::Center, Offset::Center, Size::Static(308.0), Size::Static(308.0), Padding::default()), 
             Some(RoundedRectangle::new(0.0, 8.0, background)), 
