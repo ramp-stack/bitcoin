@@ -25,8 +25,7 @@ use pelican_ui_std::{
     SetActiveInput, IS_MOBILE,
     QuickActions, ListItemSelector,
     NavigateEvent, // Alert, InternetConnection
-    ListItem, ListItemGroup, QRCode, 
-    QRCodeScanner, QRCodeScannedEvent
+    ListItem, ListItemGroup, 
 };
 
 use crate::plugin::BDKPlugin;
@@ -734,6 +733,37 @@ impl WalletCreated {
         let bumper = Bumper::single_button(ctx, button);
         let close = IconButton::close(ctx, |ctx: &mut Context| ctx.trigger_event(NavigateEvent(0)));
         let header = Header::stack(ctx, Some(close), "Wallet Created", None);
+        WalletCreated(Stack::default(), Page::new(Some(header), content, Some(bumper)))
+    }
+}
+
+#[derive(Debug, Component)]
+pub struct NameWallet(Stack, Page);
+impl OnEvent for NameWallet {}
+
+impl AppPage for NameWallet {
+    fn has_nav(&self) -> bool { false }
+    fn navigate(self: Box<Self>, ctx: &mut Context, index: usize) -> Result<Box<dyn AppPage>, Box<dyn AppPage>> {
+        match index {
+            0 => Ok(Box::new(Wallet::new(ctx))),
+            _ => Err(self)
+        }
+    }
+}
+
+impl NameWallet {
+    fn new(ctx: &mut Context) -> Self {
+        let theme = &ctx.theme;
+        let (color, text_size) = (theme.colors.text.heading, theme.fonts.size.h4);
+
+        let text = "Wallet name";
+
+        let text = Text::new(ctx, text, TextStyle::Heading, text_size, Align::Left);
+        let content = Content::new(Offset::Center, vec![Box::new(splash), Box::new(text)]);
+        let button = Button::close(ctx, "Continue", |ctx: &mut Context| ctx.trigger_event(NavigateEvent(0)));
+        let bumper = Bumper::single_button(ctx, button);
+        let close = IconButton::close(ctx, |ctx: &mut Context| ctx.trigger_event(NavigateEvent(0)));
+        let header = Header::stack(ctx, Some(close), "Name Wallet", None);
         WalletCreated(Stack::default(), Page::new(Some(header), content, Some(bumper)))
     }
 }
