@@ -8,10 +8,7 @@ use crate::{
     components::AmountInput,
     components::NumericKeypad,
     components::DataItemBitcoin,
-    components::QRCodeScanner,
-    components::QRCode,
-    events::QRCodeScannedEvent,
-    format_usd,
+    // format_usd,
     format_nano_btc,
     NANS
 };
@@ -26,6 +23,7 @@ use pelican_ui_std::{
     SetActiveInput, IS_MOBILE,
     QuickActions, ListItemSelector,
     NavigateEvent, // Alert, InternetConnection
+    QRCodeScannedEvent, QRCodeScanner, QRCode
 };
 
 use crate::plugin::BDKPlugin;
@@ -54,63 +52,63 @@ impl BitcoinHome {
         BitcoinHome(Stack::center(), Page::new(Some(header), content, Some(bumper)))
     }
 
-    fn update_transactions(&mut self, _ctx: &mut Context) {
-        // let bdk = ctx.get::<BDKPlugin>();
-        // let transactions = bdk.get_transactions();
-        // let content = &mut self.1.content();
+    // fn update_transactions(&mut self, _ctx: &mut Context) {
+    //     // let bdk = ctx.get::<BDKPlugin>();
+    //     // let transactions = bdk.get_transactions();
+    //     // let content = &mut self.1.content();
 
-        // if !transactions.is_empty() {
-        //     *content.offset() = Offset::Start;
-        //     let transactions = transactions.into_iter().map(|t| {
-        //         let txid = t.txid;
-        //         match t.datetime {
-        //             Some(stamp) => ListItem::bitcoin(
-        //                 ctx, t.is_received, t.amount.to_btc(), t.price, Timestamp::new(stamp),
-        //                 move |ctx: &mut Context| {
-        //                     // let tx = ctx.get::<BDKPlugin>().find_transaction(txid).unwrap();
-        //                     // ctx.state().set(&CurrentTransaction::new(tx));
-        //                     // ViewTransaction::navigate(ctx);
-        //                 }
-        //             ),
-        //             None => ListItem::bitcoin_sending(
-        //                 ctx, t.amount.to_btc(), t.price, 
-        //                 move |ctx: &mut Context| {
-        //                     // let tx = ctx.get::<BDKPlugin>().find_transaction(txid).unwrap();
-        //                     // ctx.state().set(&CurrentTransaction::new(tx));
-        //                     // ViewTransaction::navigate(ctx)
-        //                 }
-        //             )
-        //         }
-        //     }).collect();
+    //     // if !transactions.is_empty() {
+    //     //     *content.offset() = Offset::Start;
+    //     //     let transactions = transactions.into_iter().map(|t| {
+    //     //         let txid = t.txid;
+    //     //         match t.datetime {
+    //     //             Some(stamp) => ListItem::bitcoin(
+    //     //                 ctx, t.is_received, t.amount.to_btc(), t.price, Timestamp::new(stamp),
+    //     //                 move |ctx: &mut Context| {
+    //     //                     // let tx = ctx.get::<BDKPlugin>().find_transaction(txid).unwrap();
+    //     //                     // ctx.state().set(&CurrentTransaction::new(tx));
+    //     //                     // ViewTransaction::navigate(ctx);
+    //     //                 }
+    //     //             ),
+    //     //             None => ListItem::bitcoin_sending(
+    //     //                 ctx, t.amount.to_btc(), t.price, 
+    //     //                 move |ctx: &mut Context| {
+    //     //                     // let tx = ctx.get::<BDKPlugin>().find_transaction(txid).unwrap();
+    //     //                     // ctx.state().set(&CurrentTransaction::new(tx));
+    //     //                     // ViewTransaction::navigate(ctx)
+    //     //                 }
+    //     //             )
+    //     //         }
+    //     //     }).collect();
 
-        //     let items = &mut content.items();
-        //     let new_group = ListItemGroup::new(transactions);
-        //     match items.get_mut(1).and_then(|item| item.as_any_mut().downcast_mut::<ListItemGroup>()) {
-        //         Some(existing_group) => *existing_group = new_group,
-        //         None => items.push(Box::new(new_group)),
-        //     }
-        // }
-    }
+    //     //     let items = &mut content.items();
+    //     //     let new_group = ListItemGroup::new(transactions);
+    //     //     match items.get_mut(1).and_then(|item| item.as_any_mut().downcast_mut::<ListItemGroup>()) {
+    //     //         Some(existing_group) => *existing_group = new_group,
+    //     //         None => items.push(Box::new(new_group)),
+    //     //     }
+    //     // }
+    // }
 }
 
 impl OnEvent for BitcoinHome {
-    fn on_event(&mut self, ctx: &mut Context, event: &mut dyn Event) -> bool {
-        if let Some(TickEvent) = event.downcast_ref::<TickEvent>() {
-            // let (btc, price) = (BDKPlugin::balance(ctx), BDKPlugin::price(ctx));
-            // // println!("{:?} {:?}", btc, price); 
-            // let display = &mut *self.1.content().find::<AmountDisplay>().unwrap();
-            // *display.usd() = format_usd(btc*price).to_string();
-            // *display.btc() = format_nano_btc(btc*NANS).to_string();
-            // self.update_transactions(ctx);
+    // fn on_event(&mut self, _ctx: &mut Context, event: &mut dyn Event) -> bool {
+    //     if let Some(TickEvent) = event.downcast_ref::<TickEvent>() {
+    //         // let (btc, price) = (BDKPlugin::balance(ctx), BDKPlugin::price(ctx));
+    //         // // println!("{:?} {:?}", btc, price); 
+    //         // let display = &mut *self.1.content().find::<AmountDisplay>().unwrap();
+    //         // *display.usd() = format_usd(btc*price).to_string();
+    //         // *display.btc() = format_nano_btc(btc*NANS).to_string();
+    //         // self.update_transactions(ctx);
 
-            // if !ctx.state().get::<InternetConnection>().map(|t| t.0).unwrap_or(false) {
-            //     if self.1.content().find::<Alert>().is_none() {
-            //         self.1.content().items().push(Box::new(Alert::new(ctx, "No internet connection found.")))
-            //     }
-            // } 
-        }
-        true
-    }
+    //         // if !ctx.state().get::<InternetConnection>().map(|t| t.0).unwrap_or(false) {
+    //         //     if self.1.content().find::<Alert>().is_none() {
+    //         //         self.1.content().items().push(Box::new(Alert::new(ctx, "No internet connection found.")))
+    //         //     }
+    //         // } 
+    //     }
+    //     true
+    // }
 }
 
 #[derive(Debug, Component)]
