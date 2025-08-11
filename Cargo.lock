@@ -2267,6 +2267,7 @@ dependencies = [
  "env_logger",
  "hex",
  "image 0.25.6",
+ "imageproc",
  "jni",
  "libc",
  "log",
@@ -4851,6 +4852,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "458f7a779bf54acc9f347480ac654f68407d3aab21269a6e3c9f922acd9e2da9"
 dependencies = [
  "getrandom 0.3.3",
+ "js-sys",
+ "wasm-bindgen",
 ]
 
 [[package]]
@@ -5343,7 +5346,6 @@ dependencies = [
  "fontdue",
  "hex",
  "image 0.25.6",
- "rand 0.9.1",
  "wgpu",
  "wgpu_dyn_buffer",
 ]

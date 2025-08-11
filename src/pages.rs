@@ -48,7 +48,8 @@ impl BitcoinHome {
         let receive = Button::primary(ctx, "Receive", |ctx: &mut Context| ctx.trigger_event(NavigateEvent(1)));
         let header = Header::home(ctx, "Wallet", None);
         let bumper = Bumper::double_button(ctx, receive, send);
-        let content = Content::new(Offset::Center, vec![Box::new(AmountDisplay::new(ctx, "$148.41", "124,100 nb")) as Box<dyn Drawable>]);
+        let display = AmountDisplay::new(ctx, "$148.41", "124,100 nb");
+        let content = Content::new(ctx, Offset::Center, vec![Box::new(display) as Box<dyn Drawable>]);
         BitcoinHome(Stack::center(), Page::new(Some(header), content, Some(bumper)))
     }
 
@@ -146,7 +147,7 @@ impl Address {
 
         let header = Header::stack(ctx, Some(back), "Send bitcoin", None);
         let bumper = Bumper::single_button(ctx, button);
-        let content = Content::new(Offset::Start, vec![Box::new(address_input), Box::new(quick_actions)]);
+        let content = Content::new(ctx, Offset::Start, vec![Box::new(address_input), Box::new(quick_actions)]);
 
         Address(Stack::default(), Page::new(Some(header), content, Some(bumper)), ButtonState::Default, address)
     }
@@ -192,7 +193,8 @@ impl AppPage for ScanQR {
 
 impl ScanQR {
     fn new(ctx: &mut Context, address: Option<String>) -> Self {
-        let content = Content::new(Offset::Center, vec![Box::new(QRCodeScanner::new(ctx))]);
+        let scanner = QRCodeScanner::new(ctx);
+        let content = Content::new(ctx, Offset::Center, vec![Box::new(scanner)]);
         let back = IconButton::navigation(ctx, "left", |ctx: &mut Context| ctx.trigger_event(NavigateEvent(0)));
         let header = Header::stack(ctx, Some(back), "Scan QR Code", None);
         ScanQR(Stack::default(), Page::new(Some(header), content, None), address)
@@ -224,7 +226,7 @@ impl SelectContact {
     fn new(ctx: &mut Context) -> Self {
         let icon_button = None::<(&'static str, fn(&mut Context, &mut String))>;
         let searchbar = TextInput::new(ctx, None, None, "Profile name...", None, icon_button, false); // make this actually search
-        let content = Content::new(Offset::Start, vec![Box::new(searchbar)]);
+        let content = Content::new(ctx, Offset::Start, vec![Box::new(searchbar)]);
         let back = IconButton::navigation(ctx, "left", |ctx: &mut Context| ctx.trigger_event(NavigateEvent(0)));
         let header = Header::stack(ctx, Some(back), "Send to contact", None);
         SelectContact(Stack::default(), Page::new(Some(header), content, None))
@@ -287,7 +289,7 @@ impl Amount {
         let numeric_keypad = NumericKeypad::new(ctx);
         let mut content: Vec<Box<dyn Drawable>> = vec![Box::new(amount_display)];
         IS_MOBILE.then(|| content.push(Box::new(numeric_keypad)));
-        let content = Content::new(Offset::Center, content);
+        let content = Content::new(ctx, Offset::Center, content);
 
         let bumper = Bumper::single_button(ctx, button);
         let back = IconButton::navigation(ctx, "left", |ctx: &mut Context| ctx.trigger_event(NavigateEvent(0)));
@@ -347,7 +349,7 @@ impl Speed {
         let button = Button::primary(ctx, "Continue", |ctx: &mut Context| ctx.trigger_event(NavigateEvent(1)));
 
         let bumper = Bumper::single_button(ctx, button);
-        let content = Content::new(Offset::Start, vec![Box::new(speed_selector)]);
+        let content = Content::new(ctx, Offset::Start, vec![Box::new(speed_selector)]);
         let back = IconButton::navigation(ctx, "left", |ctx: &mut Context| ctx.trigger_event(NavigateEvent(0)));
 
         let header = Header::stack(ctx, Some(back), "Transaction speed", None);
@@ -418,7 +420,7 @@ impl Confirm {
         });
         
         let bumper = Bumper::single_button(ctx, button);
-        let content = Content::new(Offset::Start, vec![Box::new(confirm_address), Box::new(confirm_amount)]);
+        let content = Content::new(ctx, Offset::Start, vec![Box::new(confirm_address), Box::new(confirm_amount)]);
         let back = IconButton::navigation(ctx, "left", |ctx: &mut Context| ctx.trigger_event(NavigateEvent(0)));
         let header = Header::stack(ctx, Some(back), "Confirm send", None);
         Confirm(Stack::default(), Page::new(Some(header), content, Some(bumper)))
@@ -448,7 +450,7 @@ impl Success {
         };
 
         let text = Text::new(ctx, text, TextStyle::Heading, text_size, Align::Left);
-        let content = Content::new(Offset::Center, vec![splash, Box::new(text)]);
+        let content = Content::new(ctx, Offset::Center, vec![splash, Box::new(text)]);
         let button = Button::close(ctx, "Continue", |ctx: &mut Context| ctx.trigger_event(NavigateEvent(0)));
         let bumper = Bumper::single_button(ctx, button);
         let close = IconButton::close(ctx, |ctx: &mut Context| ctx.trigger_event(NavigateEvent(0)));
@@ -475,7 +477,7 @@ impl Receive {
 
         let qr_code = QRCode::new(ctx, &address);
         let text = Text::new(ctx, "Scan to receive bitcoin.", TextStyle::Secondary, text_size, Align::Left);
-        let content = Content::new(Offset::Center, vec![Box::new(qr_code), Box::new(text)]);
+        let content = Content::new(ctx, Offset::Center, vec![Box::new(qr_code), Box::new(text)]);
 
         let button = match IS_MOBILE {
             true => Button::primary(ctx, "Share", move |ctx: &mut Context| ctx.hardware.share(&address.clone())), 
@@ -516,7 +518,7 @@ impl Receive {
 //         let nano_btc = &format_nano_btc(btc * NANS);
 //         let usd_fmt = format_usd(btc*tx.price);
 //         let amount_display = AmountDisplay::new(ctx, &usd_fmt, nano_btc);
-//         let content = Content::new(Offset::Center, vec![Box::new(amount_display), Box::new(data_item)]);
+//         let content = Content::new(ctx, Offset::Center, vec![Box::new(amount_display), Box::new(data_item)]);
 //         let close = IconButton::navigation(ctx, "left", |ctx: &mut Context| BitcoinHome::navigate(ctx));
 //         let header = Header::stack(ctx, Some(close), title, None);
 //         let button = Button::close(ctx, "Done", |ctx: &mut Context| BitcoinHome::navigate(ctx));
