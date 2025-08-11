@@ -1,7 +1,12 @@
 [package]
 name = "bitcoin"
-version = "0.1.0"
+version = "0.1.2"
 edition = "2024"
+authors = ["Ella Mae <ellaammae@email.com>"]
+description = "A Rust crate built on RAMP that provides all the tools to configure a Bitcoin wallet."
+license = "BSD-3-Clause"
+repository = "https://github.com/ramp-stack/bitcoin"
+documentation = "https://docs.rs/bitcoin"
 
 [dependencies]
 bdk_esplora = "0.22.0"
@@ -9,8 +14,8 @@ bdk_wallet = "2.0.0"
 chrono = { version = "0.4.40", features = ["serde"] }
 image = "0.25.6"
 imageproc = "0.25.0"
-pelican_ui = {path = "../pelican_ui" }
-pelican_ui_std = {path = "../pelican_ui_std" }
+pelican_ui = "1.1.0"
+pelican_ui_std = "0.2.1"
 qrcode = "0.14.1"
 quircs = "0.10.2"
 reqwest = {version="0.12.20", features=["json"]}
