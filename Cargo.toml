@@ -1,5 +1,5 @@
 [package]
-name = "bitcoin"
+name = "ramp-bitcoin"
 version = "0.1.2"
 edition = "2024"
 authors = ["Ella Mae <ellaammae@email.com>"]
