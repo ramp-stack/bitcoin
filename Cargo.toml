@@ -14,8 +14,8 @@ bdk_wallet = "2.0.0"
 chrono = { version = "0.4.40", features = ["serde"] }
 image = "0.25.6"
 imageproc = "0.25.0"
-pelican_ui = "1.1.0"
-pelican_ui_std = "0.2.1"
+pelican_ui = {path="../pelican_ui"}
+pelican_ui_std = {path="../pelican_ui_std"}
 qrcode = "0.14.1"
 quircs = "0.10.2"
 reqwest = {version="0.12.20", features=["json"]}
