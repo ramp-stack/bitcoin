@@ -1,6 +1,6 @@
 [package]
 name = "ramp-bitcoin"
-version = "0.1.2"
+version = "0.1.3"
 edition = "2024"
 authors = ["Ella Mae <ellaammae@email.com>"]
 description = "A Rust crate built on RAMP that provides all the tools to configure a Bitcoin wallet."
