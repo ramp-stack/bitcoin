@@ -137,7 +137,7 @@ impl Address {
         let paste = Button::secondary(ctx, Some("paste"), "Paste Clipboard", None, move |ctx: &mut Context| {
             let data = ctx.hardware.paste();
             ctx.trigger_event(SetActiveInput(data))
-        }, Some("Pasted Clipboard".to_string()));
+        }, Some("Pasted Clipboard"));
 
         let scan_qr = Button::secondary(ctx, Some("qr_code"), "Scan QR Code", None, |ctx: &mut Context| ctx.trigger_event(NavigateEvent(2)), None);
         let contact = Button::secondary(ctx, Some("profile"), "Select Contact", None, |ctx: &mut Context| ctx.trigger_event(NavigateEvent(3)), None);

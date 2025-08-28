@@ -13,7 +13,7 @@ impl ListItemBitcoin {
     pub fn bitcoin(ctx: &mut Context, is_received: bool, btc: f64, price: f64, date: Timestamp, on_click: impl FnMut(&mut Context) + 'static) -> ListItem {
         let title = if is_received { "Received bitcoin" } else { "Sent bitcoin" };
         let usd = &format_usd(btc * price);
-        ListItem::new(ctx, true, title, None, Some(&date.friendly()), None, Some(usd), Some("Details"), None, None, None, true, on_click)
+        ListItem::new(ctx, true, title, None, Some(&date.friendly().unwrap()), None, Some(usd), Some("Details"), None, None, None, true, on_click)
     }
 
     pub fn bitcoin_sending(ctx: &mut Context, btc: f64, price: f64, on_click: impl FnMut(&mut Context) + 'static) -> ListItem {
